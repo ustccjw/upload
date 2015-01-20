@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>arale-upload</title>
+</head>
+<body>
+    <button id="uploader">上传文件</button>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="/bundle.js"></script>
+    <script>
+        var upyunPromise = require('upyun')
+        var Upload = require('upload')
+        var upload = null
+        upyunPromise.then(function (response) {
+            var config = response
+            $.extend(config, {trigger: '#uploader'})
+            upload = new Upload(config)
+
+            upload.error(function (err) {
+                alert(err.message)
+            }).success(function (response) {
+                alert(response)
+            }).progress(function (event, position, total, percent, files) {
+                console.log(percent)
+            })
+        })['catch'](function (err) {
+            console.log(err.message)
+        })
+    </script>
+</body>
+</html>
