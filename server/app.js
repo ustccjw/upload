@@ -1,10 +1,11 @@
 var crypto = require('crypto')
 var koa = require('koa')
-var app = koa()
 var router = require('koa-router')
 var compress = require('koa-compress')
 var cors = require('koa-cors')
 var logger = require('koa-logger')
+
+var app = koa()
 
 if (app.env !== 'production' && app.env !== 'test') {
     app.use(logger())
@@ -22,7 +23,7 @@ function merge(a, b) {
     return a
 }
 
-function* getServerConfig () {
+function* getServerConfig() {
     var server = this.params.server
     var data = {}
     data.success = true
