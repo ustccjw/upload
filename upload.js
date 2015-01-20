@@ -19,16 +19,18 @@ function Uploader(options) {
         action: null,
         data: null,
         accept: null,
+        multiple: true,
         change: null,
         error: null,
-        multiple: true,
-        success: null
+        success: null,
+        progress: null
     }
     if (options) {
         $.extend(settings, options)
     }
     var $trigger = $(settings.trigger)
 
+    // support basic data-api
     settings.action = settings.action || $trigger.data('action') || '/upload'
     settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
     settings.data = settings.data || parse($trigger.data('data'))
@@ -47,9 +49,6 @@ Uploader.prototype.setup = function() {
         '<form method="post" enctype="multipart/form-data"'
         + 'target="" action="' + this.settings.action + '" />'
     )
-
-    this.iframe = newIframe()
-    this.form.attr('target', this.iframe.attr('name'))
 
     var data = this.settings.data
     this.form.append(createInputs(data))
@@ -214,6 +213,7 @@ Uploader.prototype.submit = function() {
                     self.settings.error(new Error(response))
                 }
             } else {
+
                 // IE always wrap with <PRE></PRE>
                 if (response.toLowerCase().indexOf('<pre>') === 0) {
                     response = response.slice(5)
