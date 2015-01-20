@@ -1042,16 +1042,18 @@ function Uploader(options) {
         action: null,
         data: null,
         accept: null,
+        multiple: true,
         change: null,
         error: null,
-        multiple: true,
-        success: null
+        success: null,
+        progress: null
     }
     if (options) {
         $.extend(settings, options)
     }
     var $trigger = $(settings.trigger)
 
+    // support basic data-api
     settings.action = settings.action || $trigger.data('action') || '/upload'
     settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
     settings.data = settings.data || parse($trigger.data('data'))
@@ -1071,8 +1073,8 @@ Uploader.prototype.setup = function() {
         + 'target="" action="' + this.settings.action + '" />'
     )
 
-    this.iframe = newIframe()
-    this.form.attr('target', this.iframe.attr('name'))
+    // this.iframe = newIframe()
+    // this.form.attr('target', this.iframe.attr('name'))
 
     var data = this.settings.data
     this.form.append(createInputs(data))
@@ -1152,6 +1154,7 @@ Uploader.prototype.bindInput = function() {
                 return self
             }
         }
+
         if (self.settings.change) {
             self.settings.change.call(self, self._files)
         } else if (file) {
@@ -1464,6 +1467,7 @@ var getJson = function (url) {
     })
 }
 
+// 服务器 url
 var url = 'http://172.17.4.71:3000/config/upyun'
 if (!window.FormData) {
     url += '?returnUrl=true'
