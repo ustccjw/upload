@@ -1035,7 +1035,6 @@ function Uploader(options) {
     if (isString(options)) {
         options = {trigger: options}
     }
-
     var settings = {
         trigger: null,
         name: null,
@@ -1170,7 +1169,6 @@ Uploader.prototype.submit = function() {
         // var form = new FormData(self.form.get(0));
         // use FormData to upload
         // form.append(self.settings.name, self._files);
-
         var files = self._files
         var optionXhr
         if (self.settings.progress) {
@@ -1219,7 +1217,6 @@ Uploader.prototype.submit = function() {
         self.iframe = newIframe()
         self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
-
         self.iframe.one('load', function () {
 
             // https://github.com/blueimp/jQuery-File-Upload/blob/9.5.6/js/jquery.iframe-transport.js#L102
@@ -1228,7 +1225,6 @@ Uploader.prototype.submit = function() {
             $('<iframe src="javascript:false;"></iframe>')
                 .appendTo(self.form)
                 .remove()
-
             var response
             try {
 
@@ -1375,24 +1371,6 @@ function newIframe() {
     var iframe = $('<iframe name="' + iframeName + '" />').hide()
     iframeCount += 1
     return iframe
-}
-
-function MultipleUploader(options) {
-    if (!(this instanceof MultipleUploader)) {
-        return new MultipleUploader(options)
-    }
-
-    if (isString(options)) {
-        options = {trigger: options}
-    }
-    var $trigger = $(options.trigger)
-
-    var uploaders = []
-    $trigger.each(function(i, item) {
-        options.trigger = item
-        uploaders.push(new Uploader(options))
-    })
-    this._uploaders = uploaders
 }
 
 module.exports = Uploader

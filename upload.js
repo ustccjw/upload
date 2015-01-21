@@ -12,7 +12,6 @@ function Uploader(options) {
     if (isString(options)) {
         options = {trigger: options}
     }
-
     var settings = {
         trigger: null,
         name: null,
@@ -147,7 +146,6 @@ Uploader.prototype.submit = function() {
         // var form = new FormData(self.form.get(0));
         // use FormData to upload
         // form.append(self.settings.name, self._files);
-
         var files = self._files
         var optionXhr
         if (self.settings.progress) {
@@ -196,7 +194,6 @@ Uploader.prototype.submit = function() {
         self.iframe = newIframe()
         self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
-
         self.iframe.one('load', function () {
 
             // https://github.com/blueimp/jQuery-File-Upload/blob/9.5.6/js/jquery.iframe-transport.js#L102
@@ -205,7 +202,6 @@ Uploader.prototype.submit = function() {
             $('<iframe src="javascript:false;"></iframe>')
                 .appendTo(self.form)
                 .remove()
-
             var response
             try {
 
