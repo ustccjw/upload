@@ -22,7 +22,7 @@ var getJson = function (url) {
 }
 
 // 服务器 url
-var url = 'http://172.17.4.71:3000/config/upyun'
+var url = 'http://n.baixing.com:3000/config/upyun'
 if (!window.FormData) {
     url += '?returnUrl=true'
 }

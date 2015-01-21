@@ -4,6 +4,7 @@ var router = require('koa-router')
 var compress = require('koa-compress')
 var cors = require('koa-cors')
 var logger = require('koa-logger')
+var render = require('./lib/render')
 
 var app = koa()
 
@@ -36,11 +37,11 @@ function* getServerConfig() {
                 'save-key': '/{filemd5}{.suffix}'
             }
             if (this.query.returnUrl === 'true') {
-                options['return-url'] = 'http://172.17.4.71:3000/return/'
+                options['return-url'] = 'http://n.baixing.com:3000/return/'
             }
             var policy = new Buffer(JSON.stringify(options)).toString('base64')
             var hash = crypto.createHash('md5')
-            var str = policy + '&' + 'form api xxxx'
+            var str = policy + '&' + 'form-api xxxxx'
             var signature = hash.update(str, 'utf8').digest('hex')
             merge(data, {
                 bucket: options.bucket,
@@ -60,7 +61,7 @@ function* getServerConfig() {
 }
 
 function* getResult() {
-    this.body = JSON.stringify(this.query)
+    this.body = yield render('result', {message: JSON.stringify(this.query)})
 }
 
 app.listen(3000)

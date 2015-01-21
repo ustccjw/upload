@@ -6,7 +6,7 @@
 </head>
 <body>
     <button id="uploader">上传文件</button>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="/jquery.min.js"></script>
     <script src="/bundle.js"></script>
     <script>
         var upyunPromise = require('upyun')
@@ -18,9 +18,9 @@
             upload = new Upload(config)
 
             upload.error(function (err) {
-                alert(err.message)
+                console.log(err.message)
             }).success(function (response) {
-                // alert(response)
+                console.log(response)
             }).progress(function (event, position, total, percent, files) {
                 console.log(percent)
             })

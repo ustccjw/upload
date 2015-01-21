@@ -193,38 +193,32 @@ Uploader.prototype.submit = function() {
         self.iframe = newIframe()
         self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
-        self.iframe.one('load', function() {
+
+        self.iframe.one('load', function () {
             // https://github.com/blueimp/jQuery-File-Upload/blob/9.5.6/js/jquery.iframe-transport.js#L102
             // Fix for IE endless progress bar activity bug
             // (happens on form submits to iframe targets):
             $('<iframe src="javascript:false;"></iframe>')
                 .appendTo(self.form)
                 .remove()
+
             var response
             try {
-                response = $(this).contents().find("body").html()
-            } catch (e) {
-                response = "cross-domain"
-            }
-            $(this).remove()
-            if (!response || response === 'cross-domain') {
-                if (self.settings.error) {
-                    response = response || 'timeout'
-                    self.settings.error(new Error(response))
-                }
-            } else {
 
-                // IE always wrap with <PRE></PRE>
-                if (response.toLowerCase().indexOf('<pre>') === 0) {
-                    response = response.slice(5)
+                // make the same primary domain possible
+                document.domain = 'baixing.com'
+                response = $.trim($(this).contents().find("body").html())
+            } catch (e) {
+                if (self.settings.error) {
+                    self.settings.error(new Error('cross domain'))
                 }
-                if (response.toLowerCase().indexOf('</pre>') === response.length - 6) {
-                    response = response.slice(0, -6)
-                }
+            }
+            if (response) {
                 if (self.settings.success) {
                     self.settings.success(response)
                 }
             }
+            self.iframe.remove()
         })
         self.form.submit()
     }
