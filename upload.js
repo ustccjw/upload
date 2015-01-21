@@ -354,22 +354,4 @@ function newIframe() {
     return iframe
 }
 
-function MultipleUploader(options) {
-    if (!(this instanceof MultipleUploader)) {
-        return new MultipleUploader(options)
-    }
-
-    if (isString(options)) {
-        options = {trigger: options}
-    }
-    var $trigger = $(options.trigger)
-
-    var uploaders = []
-    $trigger.each(function(i, item) {
-        options.trigger = item
-        uploaders.push(new Uploader(options))
-    })
-    this._uploaders = uploaders
-}
-
 module.exports = Uploader
