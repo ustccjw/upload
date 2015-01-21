@@ -1051,7 +1051,7 @@ function Uploader(options) {
     if (options) {
         $.extend(settings, options)
     }
-    var $trigger = $(settings.trigger)
+    var $trigger = $(settings.trigger).eq(0)
 
     // support basic data-api
     settings.action = settings.action || $trigger.data('action') || '/upload'
@@ -1135,8 +1135,8 @@ Uploader.prototype.bind = function() {
 Uploader.prototype.bindInput = function() {
     var self = this
     self.input.change(function(e) {
+
         // ie9 don't support FileList Object
-        // http://stackoverflow.com/questions/12830058/ie8-input-type-file-get-files
         self._files = this.files || [{
             name: e.target.value
         }]
@@ -1165,21 +1165,23 @@ Uploader.prototype.bindInput = function() {
 Uploader.prototype.submit = function() {
     var self = this
     if (window.FormData && self._files) {
+
         // build a FormData
         // var form = new FormData(self.form.get(0));
         // use FormData to upload
         // form.append(self.settings.name, self._files);
 
+        var files = self._files
         var optionXhr
         if (self.settings.progress) {
+
             // fix the progress target file
-            var files = self._files
             optionXhr = function() {
                 var xhr = $.ajaxSettings.xhr()
                 if (xhr.upload) {
                     xhr.upload.addEventListener('progress', function(event) {
                         var percent = 0
-                        var position = event.loaded || event.position /*event.position is deprecated*/
+                        var position = event.loaded || event.position
                         var total = event.total
                         if (event.lengthComputable) {
                                 percent = Math.ceil(position / total * 100)
@@ -1212,12 +1214,14 @@ Uploader.prototype.submit = function() {
         }
         return this
     } else {
+
         // iframe upload
         self.iframe = newIframe()
         self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
 
         self.iframe.one('load', function () {
+
             // https://github.com/blueimp/jQuery-File-Upload/blob/9.5.6/js/jquery.iframe-transport.js#L102
             // Fix for IE endless progress bar activity bug
             // (happens on form submits to iframe targets):
@@ -1249,6 +1253,7 @@ Uploader.prototype.submit = function() {
 }
 
 Uploader.prototype.refreshInput = function() {
+
     //replace the input element, or the same file can not to be uploaded
     var newInput = this.input.clone()
     this.input.before(newInput)
@@ -1389,51 +1394,8 @@ function MultipleUploader(options) {
     })
     this._uploaders = uploaders
 }
-MultipleUploader.prototype.submit = function() {
-    $.each(this._uploaders, function(i, item) {
-        item.submit()
-    })
-    return this
-}
-MultipleUploader.prototype.change = function(callback) {
-    $.each(this._uploaders, function(i, item) {
-        item.change(callback)
-    })
-    return this
-}
-MultipleUploader.prototype.success = function(callback) {
-    $.each(this._uploaders, function(i, item) {
-        item.success(callback)
-    })
-    return this
-}
-MultipleUploader.prototype.error = function(callback) {
-    $.each(this._uploaders, function(i, item) {
-        item.error(callback)
-    })
-    return this
-}
-MultipleUploader.prototype.progress = function(callback) {
-    $.each(this._uploaders, function(i, item) {
-        item.progress(callback)
-    })
-    return this
-}
-MultipleUploader.prototype.enable = function (){
-    $.each(this._uploaders, function (i, item){
-        item.enable()
-    })
-    return this
-}
-MultipleUploader.prototype.disable = function (){
-    $.each(this._uploaders, function (i, item){
-        item.disable()
-    })
-    return this
-}
-MultipleUploader.Uploader = Uploader
 
-module.exports = MultipleUploader
+module.exports = Uploader
 
 },{}],"upyun":[function(require,module,exports){
 // var $ = require('jquery')
