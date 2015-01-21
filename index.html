@@ -6,6 +6,8 @@
 </head>
 <body>
     <button id="uploader">上传文件</button>
+    <div id="progress">
+    </div>
     <script src="/jquery.min.js"></script>
     <script src="/bundle.js"></script>
     <script>
@@ -17,12 +19,25 @@
             $.extend(config, {trigger: '#uploader'})
             upload = new Upload(config)
 
+            var count = 0
             upload.error(function (err) {
                 console.log(err.message)
             }).success(function (response) {
+                var i = 0
                 console.log(response)
+                var res = eval("(" + response + ")")
+                var url = 'http://bxmedia.b0.upaiyun.com' + res.url
+                var tpl = '<img src="' + url + '">'
+                $('#progress img').eq(count++).attr('src', url)
             }).progress(function (event, position, total, percent, files) {
                 console.log(percent)
+            }).change(function (files) {
+                var tpl = ''
+                for (var i = 0; i < files.length; i++) {
+                    tpl += '<img src="/loading.gif">'
+                }
+                $('#progress').html(tpl)
+                this.submit()
             })
         })['catch'](function (err) {
             console.log(err.message)
