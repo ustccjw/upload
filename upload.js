@@ -34,7 +34,6 @@ function Uploader(options) {
     settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
     settings.data = settings.data || parse($trigger.data('data'))
     settings.accept = settings.accept || $trigger.data('accept')
-    settings.success = settings.success || $trigger.data('success')
     this.settings = settings
 
     this.setup()
