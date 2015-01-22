@@ -23,7 +23,6 @@
             upload.error(function (err) {
                 console.log(err.message)
             }).success(function (response) {
-                var i = 0
                 console.log(response)
                 var res = eval("(" + response + ")")
                 var url = 'http://bxmedia.b0.upaiyun.com' + res.url
@@ -32,6 +31,7 @@
             }).progress(function (event, position, total, percent, files) {
                 console.log(percent)
             }).change(function (files) {
+                count = 0
                 var tpl = ''
                 for (var i = 0; i < files.length; i++) {
                     tpl += '<img src="/loading.gif">'
