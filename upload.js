@@ -131,7 +131,7 @@ Uploader.prototype.bindInput = function () {
                 ext[i] = $.trim(ext[i])
             }
             for (i = 0; i < files.length; i++) {
-                type = files[i].name.slice(files[i].name.lastIndexOf('.') + 1)
+                type = files[i].name.split('.').pop()
                 if ($.inArray(type.toLowerCase(), ext) === -1) {
                     self.settings.error(new Error('type error'))
                     return

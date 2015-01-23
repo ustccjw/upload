@@ -4,6 +4,12 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
 
 var Promise = ES6Promise.Promise
 
+/**
+ * compress (now only support image)
+ * @param  {File}    file
+ * @param  {object}  options {max_width, max_height, quality}
+ * @return {Promise}
+ */
 function compress(file, options) {
     options = options || {}
     return new Promise(function (resolve, reject) {
@@ -39,7 +45,8 @@ function compress(file, options) {
 
                 // have to wait till it's loaded
                 // send it to canvas
-                var resized = resize(image, options.max_width, options.max_height, options.quality)
+                // var ext = file.name.slice(file.name.lastIndexOf('.') + 1)
+                var resized = resize(image, file.type, options.max_width, options.max_height, options.quality)
                 var blob = dataURItoBlob(resized)
                 resolve({
                     blob: blob,
@@ -52,12 +59,13 @@ function compress(file, options) {
 
 /**
  * resize Image through canvas
- * @param  {Image} img
+ * @param  {Image}  img
  * @param  {number} max_width
  * @param  {number} max_height
+ * @param  {number} quality
  * @return {string} base64/URLEncoded data
  */
-function resize(img, max_width, max_height, quality) {
+function resize(img, type, max_width, max_height, quality) {
     var width = img.width
     var height = img.height
     max_width = max_width || width
@@ -83,7 +91,7 @@ function resize(img, max_width, max_height, quality) {
     canvas.height = height
     var ctx = canvas.getContext("2d")
     ctx.drawImage(img, 0, 0, width, height)
-    return canvas.toDataURL("image/jpeg", quality)
+    return canvas.toDataURL(type, quality)
 }
 
 /**
@@ -247,7 +255,7 @@ Uploader.prototype.bindInput = function () {
                 ext[i] = $.trim(ext[i])
             }
             for (i = 0; i < files.length; i++) {
-                type = files[i].name.slice(files[i].name.lastIndexOf('.') + 1)
+                type = files[i].name.split('.').pop()
                 if ($.inArray(type.toLowerCase(), ext) === -1) {
                     self.settings.error(new Error('type error'))
                     return
