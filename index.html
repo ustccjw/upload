@@ -5,29 +5,36 @@
     <title>arale-upload</title>
 </head>
 <body>
-    <button id="uploader">上传文件</button>
+    <button id="uploader" data-accept="image/jpeg,image/png" data-ext="jpeg,png,jpg">上传文件</button>
     <div id="progress">
     </div>
     <script src="/jquery.min.js"></script>
+    <script src="/es6-promise-2.0.1.min.js"></script>
     <script src="/bundle.js"></script>
     <script>
-        var upyunPromise = require('upyun')
+        var Upyun = require('upyun')
         var Upload = require('upload')
-        var upload = null
-        upyunPromise.then(function (response) {
+
+        Upyun.getConfig().then(function (response) {
             var config = response
-            $.extend(config, {trigger: '#uploader'})
-            upload = new Upload(config)
+            $.extend(config, {
+                trigger: '#uploader',
+                compress: {
+                    max_width: 180,
+                    max_height: 180,
+                    quality: 0.7
+                }
+            })
+            var upload = new Upload(config)
 
             var count = 0
-            upload.error(function (err) {
-                console.log(err.message)
-            }).success(function (response) {
+            upload.success(function (response) {
                 console.log(response)
-                var res = eval("(" + response + ")")
-                var url = 'http://bxmedia.b0.upaiyun.com' + res.url
+                var url = Upyun.getPath(response)
                 var tpl = '<img src="' + url + '">'
                 $('#progress img').eq(count++).attr('src', url)
+            }).error(function (err) {
+                console.log(err.message)
             }).progress(function (event, position, total, percent, files) {
                 console.log(percent)
             }).change(function (files) {

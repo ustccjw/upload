@@ -36,12 +36,10 @@ function* getServerConfig() {
                 expiration: Math.floor(new Date().getTime() / 1000) + 3600,
                 'save-key': '/{filemd5}{.suffix}'
             }
-            if (this.query.returnUrl === 'true') {
-                options['return-url'] = 'http://n.baixing.com:3000/return/'
-            }
+            merge(options, this.query)
             var policy = new Buffer(JSON.stringify(options)).toString('base64')
             var hash = crypto.createHash('md5')
-            var str = policy + '&' + 'form-api xxxxx'
+            var str = policy + '&' + 'form-api xxxxxxxxx'
             var signature = hash.update(str, 'utf8').digest('hex')
             merge(data, {
                 bucket: options.bucket,

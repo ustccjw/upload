@@ -3,8 +3,8 @@
  */
 
 // var $ = require('jquery');
+var compress = require('./compress')
 var iframeCount = 0
-
 function Uploader(options) {
     if (!(this instanceof Uploader)) {
         return new Uploader(options)
@@ -22,7 +22,9 @@ function Uploader(options) {
         change: null,
         error: null,
         success: null,
-        progress: null
+        progress: null,
+        ext: null,
+        compress: null
     }
     if (options) {
         $.extend(settings, options)
@@ -34,6 +36,9 @@ function Uploader(options) {
     settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
     settings.data = settings.data || parse($trigger.data('data'))
     settings.accept = settings.accept || $trigger.data('accept')
+    settings.ext = settings.ext || $trigger.data('ext')
+    settings.success = settings.success || $trigger.data('success')
+    settings.compress = settings.compress || parse($trigger.data('compress'))
     this.settings = settings
 
     this.setup()
@@ -42,7 +47,7 @@ function Uploader(options) {
 
 // initialize
 // create input, form, iframe
-Uploader.prototype.setup = function() {
+Uploader.prototype.setup = function () {
     this.form = $(
         '<form method="post" enctype="multipart/form-data"'
         + 'target="" action="' + this.settings.action + '" />'
@@ -93,10 +98,10 @@ Uploader.prototype.setup = function() {
 }
 
 // bind events
-Uploader.prototype.bind = function() {
+Uploader.prototype.bind = function () {
     var self = this
     var $trigger = $(self.settings.trigger)
-    $trigger.mouseenter(function() {
+    $trigger.mouseenter(function () {
         self.form.css({
             top: $trigger.offset().top,
             left: $trigger.offset().left,
@@ -107,37 +112,44 @@ Uploader.prototype.bind = function() {
     self.bindInput()
 }
 
-Uploader.prototype.bindInput = function() {
+Uploader.prototype.bindInput = function () {
     var self = this
     self.input.change(function(e) {
 
-        // ie9 don't support FileList Object
+        // ie9- don't support FileList Object
         self._files = this.files || [{
             name: e.target.value
         }]
         var file = self.input.val()
 
-        // 图片格式过滤
-        if (self.settings.accept === 'image/*') {
-            var type = file.slice(file.lastIndexOf('.') + 1)
-            var imageType = ['jpg', 'jpeg', 'gif', 'png']
-            if ($.inArray(type.toLowerCase(), imageType) === -1) {
-                self.settings.error(new Error('type error'))
-                return self
+        // 根据文件后缀进行过滤
+        var type = ''
+        var files = self._files
+        if (self.settings.ext) {
+            var ext = self.settings.ext.split(',')
+            for (var i = 0; i < ext.length; i++) {
+                ext[i] = $.trim(ext[i])
+            }
+            for (i = 0; i < files.length; i++) {
+                type = files[i].name.slice(files[i].name.lastIndexOf('.') + 1)
+                if ($.inArray(type.toLowerCase(), ext) === -1) {
+                    self.settings.error(new Error('type error'))
+                    return
+                }
             }
         }
 
         if (self.settings.change) {
             self.settings.change.call(self, self._files)
         } else if (file) {
-            return self.submit()
+            self.submit()
         }
     })
 }
 
 // handle submit event
 // prepare for submiting form
-Uploader.prototype.submit = function() {
+Uploader.prototype.submit = function () {
     var self = this
     if (window.FormData && self._files) {
 
@@ -150,7 +162,7 @@ Uploader.prototype.submit = function() {
         if (self.settings.progress) {
 
             // fix the progress target file
-            optionXhr = function() {
+            optionXhr = function () {
                 var xhr = $.ajaxSettings.xhr()
                 if (xhr.upload) {
                     xhr.upload.addEventListener('progress', function(event) {
@@ -169,21 +181,26 @@ Uploader.prototype.submit = function() {
 
         // upyun server do not support multiple files upload
         var len = files.length
+        self.input.prop('disabled', true)
         var form = new FormData(self.form.get(0))
+        self.input.prop('disabled', false)
+
         for (var i = 0; i < len; i++) {
-            form.append(self.settings.name, files[i])
-            $.ajax({
-                url: self.settings.action,
-                type: 'post',
-                processData: false,
-                contentType: false,
-                data: form,
-                xhr: optionXhr,
-                context: this,
-                success: self.settings.success,
-                error: function (xhr, textStatus, errorMsg) {
-                    self.settings.error(new Error(errorMsg))
-                }
+            compress(files[i], self.settings.compress).then(function (response) {
+                form.append(self.settings.name, response.blob, response.fileName)
+                $.ajax({
+                    url: self.settings.action,
+                    type: 'post',
+                    processData: false,
+                    contentType: false,
+                    data: form,
+                    xhr: optionXhr,
+                    context: this,
+                    success: self.settings.success,
+                    error: function (xhr, textStatus, errorMsg) {
+                        self.settings.error(new Error(errorMsg))
+                    }
+                })
             })
         }
         return this
@@ -195,7 +212,6 @@ Uploader.prototype.submit = function() {
         $('body').append(self.iframe)
         self.iframe.one('load', function () {
 
-            // https://github.com/blueimp/jQuery-File-Upload/blob/9.5.6/js/jquery.iframe-transport.js#L102
             // Fix for IE endless progress bar activity bug
             // (happens on form submits to iframe targets):
             $('<iframe src="javascript:false;"></iframe>')
@@ -224,7 +240,7 @@ Uploader.prototype.submit = function() {
     return this
 }
 
-Uploader.prototype.refreshInput = function() {
+Uploader.prototype.refreshInput = function () {
 
     //replace the input element, or the same file can not to be uploaded
     var newInput = this.input.clone()
@@ -279,13 +295,13 @@ Uploader.prototype.progress = function(callback) {
 }
 
 // enable
-Uploader.prototype.enable = function(){
+Uploader.prototype.enable = function () {
     this.input.prop('disabled', false)
     this.input.css('cursor', 'pointer')
 }
 
 // disable
-Uploader.prototype.disable = function(){
+Uploader.prototype.disable = function () {
     this.input.prop('disabled', true)
     this.input.css('cursor', 'not-allowed')
 }
