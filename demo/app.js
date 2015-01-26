@@ -6,16 +6,19 @@ var serve = require('koa-static')
 var router = require('koa-router')
 var json = require('koa-json')
 var compress = require('koa-compress')
+var conditional = require('koa-conditional-get')
 var logger = require('koa-logger')
+var reponseTime = require('koa-response-time')
 var objectAssign = require('object-assign')
 var render = require('./lib/render')
 
 var app = koa()
 
+app.use(reponseTime())
 if (app.env !== 'production' && app.env !== 'test') {
     app.use(logger())
 }
-
+app.use(conditional())
 app.use(compress())
 app.use(json())
 
@@ -42,11 +45,11 @@ function* getConfig() {
             }
             objectAssign(options, this.query)
             if (options['return-url']) {
-                options['return-url'] = this.originalUrl + 'return/'
+                options['return-url'] = this.protocol + '://' + this.host + '/return/'
             }
             var policy = new Buffer(JSON.stringify(options)).toString('base64')
             var hash = crypto.createHash('md5')
-            var str = policy + '&' + 'form-api xxxxx'
+            var str = policy + '&' + 'form-api xxxx'
             var signature = hash.update(str, 'utf8').digest('hex')
             data.success = true
             data.message = {

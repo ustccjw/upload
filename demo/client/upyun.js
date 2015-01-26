@@ -29,6 +29,11 @@ var getJson = function (url, data) {
 
 exports.getConfig = function (path, options) {
     path = path || '/config/upyun/'
+    if (!window.location.origin) {
+        window.location.origin = window.location.protocol + "//" +
+            window.location.hostname + (window.location.port ? ':' +
+            window.location.port: '')
+    }
     var url = window.location.origin + path
     options = options || {}
     if (window.FormData) {
@@ -57,5 +62,3 @@ exports.getPath = function (response) {
     url = 'http://bxmedia.b0.upaiyun.com' + url
     return url
 }
-
-
