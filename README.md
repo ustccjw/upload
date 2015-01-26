@@ -8,7 +8,7 @@ Base on arale/upload
 * Support simple data API
 * Support upload progress if support XHR2（IE10+ and more）
 * Support Image compress(canvas) in Modern browsers（IE10+ and more）
-* Support ext filter
+* Support suffix filter
 * Provide upyun's config
 
 ### Config
@@ -23,7 +23,7 @@ Base on arale/upload
         error: null, // trigger when error
         success: null, // trigger when upload success
         progress: null, // effective when support progress(XHR2)
-        ext: null, // check the file suffix before submit
+        suffix: null, // check the file suffix before submit
         compress: null // compress Image if support File API and Canvas
     }
 

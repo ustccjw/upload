@@ -5,16 +5,15 @@
     <title>arale-upload</title>
 </head>
 <body>
-    <button id="uploader" data-accept="image/jpeg,image/png" data-ext="jpeg,png,jpg">上传文件</button>
+    <button id="uploader" data-accept="image/jpeg,image/png" data-suffix="jpeg,png,jpg">上传文件</button>
     <div id="progress">
     </div>
     <script src="/jquery.min.js"></script>
     <script src="/es6-promise-2.0.1.min.js"></script>
-    <script src="/bundle.js"></script>
+    <script src="/bundle.min.js"></script>
     <script>
         var Upyun = require('upyun')
         var Upload = require('upload')
-
         Upyun.getConfig().then(function (response) {
             var config = response
             $.extend(config, {

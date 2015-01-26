@@ -2,8 +2,10 @@
  * src: arale/upload
  */
 
-// var $ = require('jquery');
-var compress = require('./compress')
+'use strict'
+
+var $ = require('jquery')
+var compress = require('./lib/compress')
 var iframeCount = 0
 function Uploader(options) {
     if (!(this instanceof Uploader)) {
@@ -23,7 +25,7 @@ function Uploader(options) {
         error: null,
         success: null,
         progress: null,
-        ext: null,
+        suffix: null,
         compress: null
     }
     if (options) {
@@ -36,9 +38,9 @@ function Uploader(options) {
     settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
     settings.data = settings.data || parse($trigger.data('data'))
     settings.accept = settings.accept || $trigger.data('accept')
-    settings.ext = settings.ext || $trigger.data('ext')
-    settings.success = settings.success || $trigger.data('success')
+    settings.suffix = settings.suffix || $trigger.data('suffix')
     settings.compress = settings.compress || parse($trigger.data('compress'))
+    settings.success = settings.success || $trigger.data('success')
     this.settings = settings
 
     this.setup()
@@ -123,19 +125,15 @@ Uploader.prototype.bindInput = function () {
         var file = self.input.val()
 
         // 根据文件后缀进行过滤
-        var type = ''
         var files = self._files
-        if (self.settings.ext) {
-            var ext = self.settings.ext.split(',')
-            for (var i = 0; i < ext.length; i++) {
-                ext[i] = $.trim(ext[i])
-            }
-            for (i = 0; i < files.length; i++) {
-                type = files[i].name.split('.').pop()
-                if ($.inArray(type.toLowerCase(), ext) === -1) {
+        var suffix = ''
+        for (var i = 0; i < files[i].length; i++) {
+            suffix = files[i].name.split('.').pop()
+            if (self.settings.suffix.indexOf(suffix) === -1) {
+                if (self.settings.error) {
                     self.settings.error(new Error('type error'))
-                    return
                 }
+                return
             }
         }
 
@@ -198,9 +196,15 @@ Uploader.prototype.submit = function () {
                     context: this,
                     success: self.settings.success,
                     error: function (xhr, textStatus, errorMsg) {
-                        self.settings.error(new Error(errorMsg))
+                        if (self.settings.error) {
+                            self.settings.error(new Error(errorMsg))
+                        }
                     }
                 })
+            })['catch'](function (err) {
+                if (self.settings.error) {
+                    self.settings.error(new Error(err.message))
+                }
             })
         }
         return this
@@ -219,9 +223,6 @@ Uploader.prototype.submit = function () {
                 .remove()
             var response
             try {
-
-                // make the same primary domain possible
-                document.domain = 'baixing.com'
                 response = $.trim($(this).contents().find("body").html())
             } catch (e) {
                 if (self.settings.error) {

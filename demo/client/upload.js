@@ -1,133 +1,11 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// var $ = require('jquery')
-// var Promise = require('es6-promise').Promise
-
-var Promise = ES6Promise.Promise
-
-/**
- * compress (now only support image)
- * @param  {File}    file
- * @param  {object}  options {max_width, max_height, quality}
- * @return {Promise}
- */
-function compress(file, options) {
-    options = options || {}
-    return new Promise(function (resolve, reject) {
-        if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
-            resolve({
-                blob: file,
-                fileName: file.name
-            })
-            return
-        }
-        if(!(/image/i).test(file.type)) {
-            resolve({
-                blob: file,
-                fileName: file.name
-            })
-            return
-        }
-
-        // read the files
-        var reader = new FileReader()
-        reader.readAsArrayBuffer(file)
-        reader.onload = function (event) {
-
-            // blob stuff
-            var blob = new Blob([event.target.result])
-            window.URL = window.URL || window.webkitURL
-            var blobURL = window.URL.createObjectURL(blob)
-
-            // helper Image object
-            var image = new Image()
-            image.src = blobURL
-            image.onload = function() {
-
-                // have to wait till it's loaded
-                // send it to canvas
-                // var ext = file.name.slice(file.name.lastIndexOf('.') + 1)
-                var resized = resize(image, file.type, options.max_width, options.max_height, options.quality)
-                var blob = dataURItoBlob(resized)
-                resolve({
-                    blob: blob,
-                    fileName: file.name
-                })
-            }
-        }
-    })
-}
-
-/**
- * resize Image through canvas
- * @param  {Image}  img
- * @param  {number} max_width
- * @param  {number} max_height
- * @param  {number} quality
- * @return {string} base64/URLEncoded data
- */
-function resize(img, type, max_width, max_height, quality) {
-    var width = img.width
-    var height = img.height
-    max_width = max_width || width
-    max_height = max_height || height
-    quality = quality || 0.7
-
-    // calculate the width and height, constraining the proportions
-    if (width > height) {
-        if (width > max_width) {
-            height = Math.round(height *= max_width / width)
-            width = max_width
-        }
-    } else {
-        if (height > max_height) {
-            width = Math.round(width *= max_height / height)
-            height = max_height
-        }
-    }
-
-    // resize the canvas and draw the image data into it
-    var canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    var ctx = canvas.getContext("2d")
-    ctx.drawImage(img, 0, 0, width, height)
-    return canvas.toDataURL(type, quality)
-}
-
-/**
- * convert base64/URLEncoded data component to raw binary data held in a string
- * @param  {string} dataURI base64/URLEncoded data
- * @return {string}         raw binary data
- */
-function dataURItoBlob(dataURI, fileName) {
-    var byteString
-    if (dataURI.split(',')[0].indexOf('base64') >= 0) {
-        byteString = atob(dataURI.split(',')[1])
-    }
-    else {
-        byteString = unescape(dataURI.split(',')[1])
-    }
-
-    // separate out the mime component
-    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
-
-    // write the bytes of the string to a typed array
-    var ia = new Uint8Array(byteString.length)
-    for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i)
-    }
-    return new Blob([ia], {type:mimeString})
-}
-
-module.exports = compress
-
-},{}],"upload":[function(require,module,exports){
 /*
  * src: arale/upload
  */
 
-// var $ = require('jquery');
-var compress = require('./compress')
+'use strict'
+
+var $ = require('jquery')
+var compress = require('./lib/compress')
 var iframeCount = 0
 function Uploader(options) {
     if (!(this instanceof Uploader)) {
@@ -147,7 +25,7 @@ function Uploader(options) {
         error: null,
         success: null,
         progress: null,
-        ext: null,
+        suffix: null,
         compress: null
     }
     if (options) {
@@ -160,9 +38,9 @@ function Uploader(options) {
     settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
     settings.data = settings.data || parse($trigger.data('data'))
     settings.accept = settings.accept || $trigger.data('accept')
-    settings.ext = settings.ext || $trigger.data('ext')
-    settings.success = settings.success || $trigger.data('success')
+    settings.suffix = settings.suffix || $trigger.data('suffix')
     settings.compress = settings.compress || parse($trigger.data('compress'))
+    settings.success = settings.success || $trigger.data('success')
     this.settings = settings
 
     this.setup()
@@ -247,19 +125,15 @@ Uploader.prototype.bindInput = function () {
         var file = self.input.val()
 
         // 根据文件后缀进行过滤
-        var type = ''
         var files = self._files
-        if (self.settings.ext) {
-            var ext = self.settings.ext.split(',')
-            for (var i = 0; i < ext.length; i++) {
-                ext[i] = $.trim(ext[i])
-            }
-            for (i = 0; i < files.length; i++) {
-                type = files[i].name.split('.').pop()
-                if ($.inArray(type.toLowerCase(), ext) === -1) {
+        var suffix = ''
+        for (var i = 0; i < files[i].length; i++) {
+            suffix = files[i].name.split('.').pop()
+            if (self.settings.suffix.indexOf(suffix) === -1) {
+                if (self.settings.error) {
                     self.settings.error(new Error('type error'))
-                    return
                 }
+                return
             }
         }
 
@@ -322,9 +196,15 @@ Uploader.prototype.submit = function () {
                     context: this,
                     success: self.settings.success,
                     error: function (xhr, textStatus, errorMsg) {
-                        self.settings.error(new Error(errorMsg))
+                        if (self.settings.error) {
+                            self.settings.error(new Error(errorMsg))
+                        }
                     }
                 })
+            })['catch'](function (err) {
+                if (self.settings.error) {
+                    self.settings.error(new Error(err.message))
+                }
             })
         }
         return this
@@ -343,9 +223,6 @@ Uploader.prototype.submit = function () {
                 .remove()
             var response
             try {
-
-                // make the same primary domain possible
-                document.domain = 'baixing.com'
                 response = $.trim($(this).contents().find("body").html())
             } catch (e) {
                 if (self.settings.error) {
@@ -490,60 +367,3 @@ function newIframe() {
 }
 
 module.exports = Uploader
-
-},{"./compress":1}],"upyun":[function(require,module,exports){
-// var $ = require('jquery')
-// var Promise = require('es6-promise').Promise
-
-// get server config (jsonp, promise)
-var Promise = ES6Promise.Promise
-var getJson = function (url, data) {
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            dataType: 'jsonp',
-            data: data,
-            url: url,
-            success: function (response) {
-                if (response.success) {
-                    resolve(response)
-                }
-                else {
-                    reject(new Error(response.message))
-                }
-            }
-        })
-    })
-}
-
-exports.getConfig = function (configUrl, options) {
-    var url = configUrl || 'http://n.baixing.com:3000/config/upyun'
-    var config = {
-        'return-url': 'http://n.baixing.com:3000/return/'
-    }
-    $.extend(config, options)
-    if (window.FormData) {
-        delete config['return-url']
-    }
-    return getJson(url, config).then(function (response) {
-        var data = {}
-        data.policy = response.policy
-        data.signature = response.signature
-        var action = 'http://v0.api.upyun.com/' + response.bucket
-        var config = {
-            data: data,
-            action: action,
-            name: 'file'
-        }
-        return config
-    })
-}
-
-exports.getPath = function (response) {
-    var url = $.parseJSON(response).url
-    url = 'http://bxmedia.b0.upaiyun.com' + url
-    return url
-}
-
-
-
-},{}]},{},[]);
