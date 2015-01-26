@@ -151,33 +151,9 @@ Uploader.prototype.submit = function () {
     var self = this
     if (window.FormData && self._files) {
 
-        // build a FormData
-        // var form = new FormData(self.form.get(0));
         // use FormData to upload
-        // form.append(self.settings.name, self._files);
-        var files = self._files
-        var optionXhr
-        if (self.settings.progress) {
-
-            // fix the progress target file
-            optionXhr = function () {
-                var xhr = $.ajaxSettings.xhr()
-                if (xhr.upload) {
-                    xhr.upload.addEventListener('progress', function(event) {
-                        var percent = 0
-                        var position = event.loaded || event.position
-                        var total = event.total
-                        if (event.lengthComputable) {
-                                percent = Math.ceil(position / total * 100)
-                        }
-                        self.settings.progress(event, position, total, percent, files)
-                    }, false)
-                }
-                return xhr
-            }
-        }
-
         // upyun server do not support multiple files upload
+        var files = self._files
         var len = files.length
         self.input.prop('disabled', true)
         var form = new FormData(self.form.get(0))
@@ -192,12 +168,30 @@ Uploader.prototype.submit = function () {
                     processData: false,
                     contentType: false,
                     data: form,
-                    xhr: optionXhr,
                     context: this,
-                    success: self.settings.success,
+                    xhr: function () {
+                        var xhr = $.ajaxSettings.xhr()
+                        if (xhr.upload) {
+                            xhr.upload.addEventListener('progress', function(event) {
+                                var percent = 0
+                                var position = event.loaded || event.position
+                                var total = event.total
+                                if (event.lengthComputable) {
+                                        percent = Math.ceil(position / total * 100)
+                                }
+                                self.settings.progress(event, position, total, percent, response.fileName)
+                            }, false)
+                        }
+                        return xhr
+                    },
+                    success: function (data) {
+                        if (self.settings.success) {
+                            self.settings.success(data, response.fileName)
+                        }
+                    },
                     error: function (xhr, textStatus, errorMsg) {
                         if (self.settings.error) {
-                            self.settings.error(new Error(errorMsg))
+                            self.settings.error(new Error(errorMsg), response.fileName)
                         }
                     }
                 })
@@ -213,6 +207,7 @@ Uploader.prototype.submit = function () {
         // iframe upload
         self.iframe = newIframe()
         self.form.attr('target', self.iframe.attr('name'))
+        self.iframe.data('fileName', self._files[0].name)
         $('body').append(self.iframe)
         self.iframe.one('load', function () {
 
@@ -231,7 +226,7 @@ Uploader.prototype.submit = function () {
             }
             if (response) {
                 if (self.settings.success) {
-                    self.settings.success(response)
+                    self.settings.success(response, this.data('fileName'))
                 }
             }
             self.iframe.remove()
@@ -265,10 +260,10 @@ Uploader.prototype.change = function(callback) {
 // handle when upload success
 Uploader.prototype.success = function(callback) {
     var me = this
-    this.settings.success = function(response) {
+    this.settings.success = function(response, fileName) {
         me.refreshInput()
         if (callback) {
-            callback(response)
+            callback(response, fileName)
         }
     }
     return this
@@ -277,10 +272,10 @@ Uploader.prototype.success = function(callback) {
 // handle when upload error
 Uploader.prototype.error = function(callback) {
     var me = this
-    this.settings.error = function(response) {
+    this.settings.error = function(response, fileName) {
         if (callback) {
             me.refreshInput()
-            callback(response)
+            callback(response, fileName)
         }
     }
     return this

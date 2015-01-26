@@ -26,21 +26,21 @@
             })
             var upload = new Upload(config)
 
-            var count = 0
-            upload.success(function (response) {
-                console.log(response)
+            upload.success(function (response, fileName) {
+                console.log(response, fileName)
                 var url = Upyun.getPath(response)
-                var tpl = '<img src="' + url + '">'
-                $('#progress img').eq(count++).attr('src', url)
-            }).error(function (err) {
-                console.log(err.message)
-            }).progress(function (event, position, total, percent, files) {
-                console.log(percent)
+                $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
+
+            }).error(function (err, fileName) {
+                console.error(err.message, fileName)
+
+            }).progress(function (event, position, total, percent, fileName) {
+                console.log(percent, fileName)
+
             }).change(function (files) {
-                count = 0
                 var tpl = ''
                 for (var i = 0; i < files.length; i++) {
-                    tpl += '<img src="/loading.gif">'
+                    tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'
                 }
                 $('#progress').html(tpl)
                 this.submit()
