@@ -19,8 +19,8 @@
             $.extend(config, {
                 trigger: '#uploader',
                 compress: {
-                    max_width: 180,
-                    max_height: 180,
+                    max_width: 50,
+                    max_height: 50,
                     quality: 0.7
                 }
             })
@@ -38,6 +38,7 @@
                 console.log(percent, fileName)
 
             }).change(function (files) {
+                console.log(files)
                 var tpl = ''
                 for (var i = 0; i < files.length; i++) {
                     tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'

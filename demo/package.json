@@ -2,10 +2,11 @@
   "name": "upload-demo",
   "version": "1.0.0",
   "description": "A upload demo use upyun",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm install && gulp"
+    "build": "npm install && gulp",
+    "start": "iojs server"
   },
   "repository": {
     "type": "git",

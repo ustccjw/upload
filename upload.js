@@ -1,5 +1,5 @@
 /*
- * src: arale/upload
+ * Base on arale/upload
  */
 
 'use strict'
@@ -117,23 +117,24 @@ Uploader.prototype.bind = function () {
 Uploader.prototype.bindInput = function () {
     var self = this
     self.input.change(function(e) {
-
-        // ie9- don't support FileList Object
-        self._files = this.files || [{
-            name: e.target.value
-        }]
+        self._files = []
         var file = self.input.val()
 
+        // ie9- don't support FileList Object
+        var files = this.files || [{
+            name: e.target.value
+        }]
+
         // 根据文件后缀进行过滤
-        var files = self._files
         var suffix = ''
-        for (var i = 0; i < files[i].length; i++) {
+        for (var i = 0; i < files.length; i++) {
             suffix = files[i].name.split('.').pop()
             if (self.settings.suffix.indexOf(suffix) === -1) {
                 if (self.settings.error) {
-                    self.settings.error(new Error('type error'))
+                    self.settings.error(new Error('type error'), files[i].name)
                 }
-                return
+            } else {
+                self._files.push(files[i])
             }
         }
 
@@ -154,52 +155,52 @@ Uploader.prototype.submit = function () {
         // use FormData to upload
         // upyun server do not support multiple files upload
         var files = self._files
-        var len = files.length
         self.input.prop('disabled', true)
         var form = new FormData(self.form.get(0))
         self.input.prop('disabled', false)
 
-        for (var i = 0; i < len; i++) {
-            compress(files[i], self.settings.compress).then(function (response) {
-                form.append(self.settings.name, response.blob, response.fileName)
-                $.ajax({
-                    url: self.settings.action,
-                    type: 'post',
-                    processData: false,
-                    contentType: false,
-                    data: form,
-                    context: this,
-                    xhr: function () {
-                        var xhr = $.ajaxSettings.xhr()
-                        if (xhr.upload) {
-                            xhr.upload.addEventListener('progress', function(event) {
-                                var percent = 0
-                                var position = event.loaded || event.position
-                                var total = event.total
-                                if (event.lengthComputable) {
+        for (var i = 0; i < files.length; i++) {
+            (function (file) {
+                compress(file, self.settings.compress).then(function (blob) {
+                    form.append(self.settings.name, blob, file.name)
+                    $.ajax({
+                        url: self.settings.action,
+                        type: 'post',
+                        processData: false,
+                        contentType: false,
+                        data: form,
+                        xhr: function () {
+                            var xhr = $.ajaxSettings.xhr()
+                            if (xhr.upload && self.settings.progress) {
+                                xhr.upload.addEventListener('progress', function(event) {
+                                    var percent = 0
+                                    var position = event.loaded || event.position
+                                    var total = event.total
+                                    if (event.lengthComputable) {
                                         percent = Math.ceil(position / total * 100)
-                                }
-                                self.settings.progress(event, position, total, percent, response.fileName)
-                            }, false)
+                                    }
+                                    self.settings.progress(event, position, total, percent, file.name)
+                                }, false)
+                            }
+                            return xhr
+                        },
+                        success: function (data) {
+                            if (self.settings.success) {
+                                self.settings.success(data, file.name)
+                            }
+                        },
+                        error: function (xhr, textStatus, errorMsg) {
+                            if (self.settings.error) {
+                                self.settings.error(new Error(errorMsg), file.name)
+                            }
                         }
-                        return xhr
-                    },
-                    success: function (data) {
-                        if (self.settings.success) {
-                            self.settings.success(data, response.fileName)
-                        }
-                    },
-                    error: function (xhr, textStatus, errorMsg) {
-                        if (self.settings.error) {
-                            self.settings.error(new Error(errorMsg), response.fileName)
-                        }
+                    })
+                })['catch'](function (err) {
+                    if (self.settings.error) {
+                        self.settings.error(new Error(err.message), file.name)
                     }
                 })
-            })['catch'](function (err) {
-                if (self.settings.error) {
-                    self.settings.error(new Error(err.message))
-                }
-            })
+            })(files[i])
         }
         return this
     } else {
@@ -221,7 +222,7 @@ Uploader.prototype.submit = function () {
                 response = $.trim($(this).contents().find("body").html())
             } catch (e) {
                 if (self.settings.error) {
-                    self.settings.error(new Error('cross domain'))
+                    self.settings.error(new Error('cross domain'), this.data('fileName'))
                 }
             }
             if (response) {

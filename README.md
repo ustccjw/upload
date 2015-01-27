@@ -4,12 +4,12 @@ Demo's server use koa, so need node v0.11.13+ or io.js.
 Based on arale/upload.
 
 ### Characteristics
-* Use HTML5 and Iframe <s>not flash</s>
+* Use HTML5 and Iframe <s>no flash</s>
 * Support upload progress if support XHR2（IE10+ and more）
 * Support Image compress(use canvas) if support File API and canvas（IE10+ and more）
 * Support file-suffix filter
 * Support simple data API
-* Provide upyun's config
+* Provide get upyun's config (return promise)
 
 ### Config
     var settings = {

@@ -11,7 +11,6 @@ var getJson = function (url, data) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             url: url,
-            dataType: 'json',
             data: data,
             success: function (response) {
                 if (response.success) {
@@ -29,11 +28,9 @@ var getJson = function (url, data) {
 
 exports.getConfig = function (path, options) {
     path = path || '/config/upyun/'
-    if (!window.location.origin) {
-        window.location.origin = window.location.protocol + "//" +
-            window.location.hostname + (window.location.port ? ':' +
-            window.location.port: '')
-    }
+    window.location.origin = window.location.origin ||
+        window.location.protocol + "//" + window.location.hostname +
+        (window.location.port ? ':' + window.location.port: '')
     var url = window.location.origin + path
     options = options || {}
     if (window.FormData) {
