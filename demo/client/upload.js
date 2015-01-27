@@ -222,12 +222,12 @@ Uploader.prototype.submit = function () {
                 response = $.trim($(this).contents().find("body").html())
             } catch (e) {
                 if (self.settings.error) {
-                    self.settings.error(new Error('cross domain'), this.data('fileName'))
+                    self.settings.error(new Error('cross domain'), $(this).data('fileName'))
                 }
             }
             if (response) {
                 if (self.settings.success) {
-                    self.settings.success(response, this.data('fileName'))
+                    self.settings.success(response, $(this).data('fileName'))
                 }
             }
             self.iframe.remove()
