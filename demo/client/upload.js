@@ -122,7 +122,7 @@ Uploader.prototype.bindInput = function () {
 
         // ie9- don't support FileList Object
         var files = this.files || [{
-            name: e.target.value
+            name: e.target.value.split('\\').pop()
         }]
 
         // 根据文件后缀进行过滤
