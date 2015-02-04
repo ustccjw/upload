@@ -26,7 +26,7 @@ gulp.task('browserify', function () {
     pipe(buffer()).
     pipe(sourcemaps.init({loadMaps: true})).
     pipe(uglify()).
-    pipe(sourcemaps.write('./src')).
+    pipe(sourcemaps.write('./')).
     pipe(gulp.dest('./public/javascript'))
 })
 
