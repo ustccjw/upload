@@ -1,6 +1,5 @@
 'use strict'
 
-var $ = require('jquery')
 var ES6Promise = require('es6-promise')
 var compress = require('./lib/compress')
 

@@ -29,7 +29,6 @@
     ]
   },
   "browserify-shim": {
-    "jquery": "global:jQuery",
     "es6-promise": "global:ES6Promise"
   },
   "dependencies": {

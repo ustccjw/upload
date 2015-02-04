@@ -4,7 +4,6 @@
 
 'use strict'
 
-var $ = require('jquery')
 var compress = require('./lib/compress')
 var iframeCount = 0
 function Uploader(options) {
