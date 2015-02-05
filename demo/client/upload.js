@@ -6,19 +6,20 @@
 
 var compress = require('./lib/compress')
 var iframeCount = 0
+
 function Uploader(options) {
     if (!(this instanceof Uploader)) {
         return new Uploader(options)
     }
-    if (isString(options)) {
-        options = {trigger: options}
+    if (isType(Object)(options)) {
+        return null
     }
     var settings = {
         trigger: null,
-        name: null,
-        action: null,
-        data: null,
+        name: 'file',
+        action: '/upload',
         accept: null,
+        data: null,
         multiple: true,
         change: null,
         error: null,
@@ -27,19 +28,7 @@ function Uploader(options) {
         suffix: null,
         compress: null
     }
-    if (options) {
-        $.extend(settings, options)
-    }
-    var $trigger = $(settings.trigger).eq(0)
-
-    // support basic data-api
-    settings.action = settings.action || $trigger.data('action') || '/upload'
-    settings.name = settings.name || $trigger.attr('name') || $trigger.data('name') || 'file'
-    settings.data = settings.data || parse($trigger.data('data'))
-    settings.accept = settings.accept || $trigger.data('accept')
-    settings.suffix = settings.suffix || $trigger.data('suffix')
-    settings.compress = settings.compress || parse($trigger.data('compress'))
-    settings.success = settings.success || $trigger.data('success')
+    $.extend(settings, options)
     this.settings = settings
 
     this.setup()
@@ -56,11 +45,6 @@ Uploader.prototype.setup = function () {
 
     var data = this.settings.data
     this.form.append(createInputs(data))
-    if (window.FormData) {
-        this.form.append(createInputs({'_uploader_': 'formdata'}))
-    } else {
-        this.form.append(createInputs({'_uploader_': 'iframe'}))
-    }
 
     var input = document.createElement('input')
     input.type = 'file'
@@ -115,9 +99,9 @@ Uploader.prototype.bind = function () {
 
 Uploader.prototype.bindInput = function () {
     var self = this
+    self.files = []
     self.input.change(function(e) {
-        self._files = []
-        var file = self.input.val()
+        self.files = []
 
         // ie9- don't support FileList Object
         var files = this.files || [{
@@ -133,13 +117,17 @@ Uploader.prototype.bindInput = function () {
                     self.settings.error(new Error('type error'), files[i].name)
                 }
             } else {
-                self._files.push(files[i])
+                self.files.push(files[i])
             }
         }
 
+        // no accept suffix
+        if (!self.files.length) {
+            return
+        }
         if (self.settings.change) {
-            self.settings.change.call(self, self._files)
-        } else if (file) {
+            self.settings.change.call(self, self.files)
+        } else {
             self.submit()
         }
     })
@@ -148,92 +136,99 @@ Uploader.prototype.bindInput = function () {
 // handle submit event
 // prepare for submiting form
 Uploader.prototype.submit = function () {
+    if (window.FormData) {
+        this.ajaxSubmit()
+    } else {
+        this.formSubmit()
+    }
+}
+
+Uploader.prototype.ajaxSubmit = function () {
     var self = this
-    if (window.FormData && self._files) {
 
-        // use FormData to upload
-        // upyun server do not support multiple files upload
-        var files = self._files
-        self.input.prop('disabled', true)
-        var form = new FormData(self.form.get(0))
-        self.input.prop('disabled', false)
+    // upyun server do not support multiple files upload
+    var files = self.files
+    self.input.prop('disabled', true)
+    var form = new FormData(self.form.get(0))
+    self.input.prop('disabled', false)
 
-        for (var i = 0; i < files.length; i++) {
-            (function (file) {
-                compress(file, self.settings.compress).then(function (blob) {
-                    form.append(self.settings.name, blob, file.name)
-                    $.ajax({
-                        url: self.settings.action,
-                        type: 'post',
-                        processData: false,
-                        contentType: false,
-                        data: form,
-                        xhr: function () {
-                            var xhr = $.ajaxSettings.xhr()
-                            if (xhr.upload && self.settings.progress) {
-                                xhr.upload.addEventListener('progress', function(event) {
-                                    var percent = 0
-                                    var position = event.loaded || event.position
-                                    var total = event.total
-                                    if (event.lengthComputable) {
-                                        percent = Math.ceil(position / total * 100)
-                                    }
-                                    self.settings.progress(event, position, total, percent, file.name)
-                                }, false)
-                            }
-                            return xhr
-                        },
-                        success: function (data) {
-                            if (self.settings.success) {
-                                self.settings.success(data, file.name)
-                            }
-                        },
-                        error: function (xhr, textStatus, errorMsg) {
-                            if (self.settings.error) {
-                                self.settings.error(new Error(errorMsg), file.name)
-                            }
+    for (var i = 0; i < files.length; i++) {
+        (function (file) {
+            compress(file, self.settings.compress)['catch'](function (err) {
+
+                // compress failed
+                if (self.settings.error) {
+                    self.settings.error(new Error('图片压缩失败'), file.name)
+                }
+            }).then(function (blob) {
+                blob = blob || file
+                form.append(self.settings.name, blob, file.name)
+                $.ajax({
+                    url: self.settings.action,
+                    type: 'post',
+                    processData: false,
+                    contentType: false,
+                    data: form,
+                    xhr: function () {
+                        var xhr = $.ajaxSettings.xhr()
+                        if (xhr.upload && self.settings.progress) {
+                            xhr.upload.addEventListener('progress', function(event) {
+                                var percent = 0
+                                var position = event.loaded || event.position
+                                var total = event.total
+                                if (event.lengthComputable) {
+                                    percent = Math.ceil(position / total * 100)
+                                }
+                                self.settings.progress(event, position, total, percent, file.name)
+                            }, false)
                         }
-                    })
-                })['catch'](function (err) {
-                    if (self.settings.error) {
-                        self.settings.error(new Error(err.message), file.name)
+                        return xhr
+                    },
+                    success: function (data) {
+                        if (self.settings.success) {
+                            self.settings.success(data, file.name)
+                        }
+                    },
+                    error: function (xhr, textStatus, errorMsg) {
+                        if (self.settings.error) {
+                            self.settings.error(new Error(errorMsg), file.name)
+                        }
                     }
                 })
-            })(files[i])
-        }
-        return this
-    } else {
-
-        // iframe upload
-        self.iframe = newIframe()
-        self.form.attr('target', self.iframe.attr('name'))
-        self.iframe.data('fileName', self._files[0].name)
-        $('body').append(self.iframe)
-        self.iframe.one('load', function () {
-
-            // Fix for IE endless progress bar activity bug
-            // (happens on form submits to iframe targets):
-            $('<iframe src="javascript:false;"></iframe>')
-                .appendTo(self.form)
-                .remove()
-            var response
-            try {
-                response = $.trim($(this).contents().find("body").html())
-            } catch (e) {
-                if (self.settings.error) {
-                    self.settings.error(new Error('cross domain'), $(this).data('fileName'))
-                }
-            }
-            if (response) {
-                if (self.settings.success) {
-                    self.settings.success(response, $(this).data('fileName'))
-                }
-            }
-            self.iframe.remove()
-        })
-        self.form.submit()
+            })
+        })(files[i])
     }
-    return this
+}
+
+Uploader.prototype.formSubmit = function () {
+    var self = this
+    self.iframe = newIframe()
+    self.form.attr('target', self.iframe.attr('name'))
+    self.iframe.data('fileName', self.files[0].name)
+    $('body').append(self.iframe)
+    self.iframe.one('load', function () {
+
+        // Fix for IE endless progress bar activity bug
+        // (happens on form submits to iframe targets):
+        $('<iframe src="javascript:false;"></iframe>')
+            .appendTo(self.form)
+            .remove()
+        var response = ''
+        try {
+            response = $.trim($(this).contents().find("body").html())
+        } catch (e) {
+            if (self.settings.error) {
+                self.settings.error(new Error('cross domain'), $(this).data('fileName'))
+            }
+        }
+        if (response) {
+            if (self.settings.success) {
+                self.settings.success(response, $(this).data('fileName'))
+            }
+        }
+        self.iframe.remove()
+    })
+    self.form.submit()
 }
 
 Uploader.prototype.refreshInput = function () {
@@ -290,23 +285,11 @@ Uploader.prototype.progress = function(callback) {
     return this
 }
 
-// enable
-Uploader.prototype.enable = function () {
-    this.input.prop('disabled', false)
-    this.input.css('cursor', 'pointer')
-}
-
-// disable
-Uploader.prototype.disable = function () {
-    this.input.prop('disabled', true)
-    this.input.css('cursor', 'not-allowed')
-}
-
-// Helpers
-// -------------
-
-function isString(val) {
-    return Object.prototype.toString.call(val) === '[object String]'
+// Help function
+function isType(type) {
+  return function(obj) {
+    return Object.prototype.toString.call(obj) === "[object " + type + "]"
+  }
 }
 
 function createInputs(data) {
@@ -321,25 +304,6 @@ function createInputs(data) {
         inputs.push(i)
     }
     return inputs
-}
-
-function parse(str) {
-    if (!str) return {}
-    var ret = {}
-
-    var pairs = str.split('&')
-    var unescape = function(s) {
-        return decodeURIComponent(s.replace(/\+/g, ' '))
-    }
-
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=')
-        var key = unescape(pair[0])
-        var val = unescape(pair[1])
-        ret[key] = val
-    }
-
-    return ret
 }
 
 function findzIndex($node) {

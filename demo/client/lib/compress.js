@@ -12,13 +12,8 @@ ES6Promise.polyfill()
 function compress(file, options) {
 
     // check File support
-    if (!window.File) {
-        return Promise.reject(new Error('not support'))
-    }
-
-    // check file parameter
-    if (!(file instanceof File)) {
-        return Promise.reject(new Error('file error'))
+    if (!window.File || !window.FileReader || !window.URL) {
+        return Promise.resolve(file)
     }
 
     // do not compress
@@ -45,7 +40,7 @@ function compress(file, options) {
             image.onload = function() {
 
                 // send it to canvas
-                var dataURI = resize(image, file.type, options.max_width, options.max_height, options.quality)
+                var dataURI = resize(image, file.type, options)
                 var blob = dataURItoBlob(dataURI)
                 resolve(blob)
             }
@@ -55,18 +50,17 @@ function compress(file, options) {
 
 /**
  * resize Image through canvas
- * @param  {Image}  img
- * @param  {number} max_width
- * @param  {number} max_height
- * @param  {number} quality
- * @return {string} base64/URLEncoded data
+ * @param  {Image}  img      DOM Element
+ * @param  {string} type     MIME-STRING
+ * @param  {number} options  {max_width, max_height, quality}
+ * @return {string}          base64/URLEncoded data
  */
-function resize(img, type, max_width, max_height, quality) {
+function resize(img, type, options) {
     var width = img.width
     var height = img.height
-    max_width = max_width || width
-    max_height = max_height || height
-    quality = quality || 0.7
+    var max_width = options.max_width || width
+    var max_height = options.max_height || height
+    var quality = options.quality || 0.7
 
     // calculate the width and height, constraining the proportions
     if (width > height) {
@@ -96,7 +90,7 @@ function resize(img, type, max_width, max_height, quality) {
  * @return {string}         raw binary data
  */
 function dataURItoBlob(dataURI) {
-    var byteString
+    var byteString = ''
     if (dataURI.split(',')[0].indexOf('base64') >= 0) {
         byteString = atob(dataURI.split(',')[1])
     }

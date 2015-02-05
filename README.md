@@ -8,7 +8,6 @@ Based on arale/upload.
 * Support upload progress if support XHR2（IE10+ and more）
 * Support Image compress(use canvas) if support File API and canvas（IE10+ and more）
 * Support file-suffix filter
-* Support simple data API
 * Provide get upyun's config (return promise)
 
 ### Config
