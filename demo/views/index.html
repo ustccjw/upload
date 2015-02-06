@@ -12,42 +12,35 @@
     <script src="/es6-promise-2.0.1.min.js"></script>
     <script src="/bundle.min.js"></script>
     <script>
-        var Upyun = require('upyun')
-        var Upload = require('upload')
-        Upyun.getConfig().then(function (response) {
-            var config = response
-            $.extend(config, {
-                trigger: '#uploader',
-                accept: 'image/jpeg,image/png',
-                suffix: 'jpeg,png,jpg',
-                compress: {
-                    quality: 0.8
-                }
-            })
-            var upload = new Upload(config)
+        var config = {
+            trigger: '#uploader',
+            accept: 'image/jpeg,image/png',
+            suffix: 'jpeg,png,jpg',
+            compress: {
+                quality: 0.8
+            }
+        }
+        var upload = new UpyunUpload('bxmedia', config)
 
-            upload.success(function (response, fileName) {
-                console.log(response, fileName)
-                var url = Upyun.getPath(response)
-                $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
+        upload.success(function (response, fileName) {
+            console.log(response, fileName)
+            var url = UpyunUpload.getPath(response)
+            $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
 
-            }).error(function (err, fileName) {
-                console.error(err.message, fileName)
+        }).error(function (err, fileName) {
+            console.error(err.message, fileName)
 
-            }).progress(function (event, position, total, percent, fileName) {
-                console.log(percent, fileName)
+        }).progress(function (event, position, total, percent, fileName) {
+            console.log(percent, fileName)
 
-            }).change(function (files) {
-                console.log(files)
-                var tpl = ''
-                for (var i = 0; i < files.length; i++) {
-                    tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'
-                }
-                $('#progress').html(tpl)
-                this.submit()
-            })
-        })['catch'](function (err) {
-            console.log(err.message)
+        }).change(function (files) {
+            console.log(files)
+            var tpl = ''
+            for (var i = 0; i < files.length; i++) {
+                tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'
+            }
+            $('#progress').html(tpl)
+            this.submit()
         })
     </script>
 </body>

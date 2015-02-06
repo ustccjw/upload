@@ -9,17 +9,17 @@ var render = require('../lib/render')
 // router
 app.use(router(app))
 app.get('/', getIndex)
-app.get('/config/:server/', getConfig)
+app.get('/token/:server/', getToken)
 app.get('/return/', getResult)
 
-function* getConfig() {
+function* getToken() {
     var server = this.params.server
     var data = {}
 
     try{
         if (server === 'upyun') {
             var options = {
-                bucket: 'bxmedia',
+                bucket: this.query.bucket,
                 expiration: Math.floor(new Date().getTime() / 1000) + 3600,
                 'save-key': '/{filemd5}{.suffix}'
             }
@@ -33,7 +33,6 @@ function* getConfig() {
             var signature = hash.update(str, 'utf8').digest('hex')
             data.success = true
             data.message = {
-                bucket: options.bucket,
                 policy: policy,
                 signature: signature
             }

@@ -4,7 +4,7 @@
 
 'use strict'
 
-var compress = require('./lib/compress')
+var compress = require('./compress')
 var iframeCount = 0
 
 function Upload(options) {

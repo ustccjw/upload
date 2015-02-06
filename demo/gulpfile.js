@@ -11,16 +11,10 @@ var buffer = require('vinyl-buffer')
 
 gulp.task('browserify', function () {
     return browserify([
-        './client/upload.js',
-        './client/upyun.js'
-    ]).
-    require([{
-        file: './client/upload.js',
-        expose: 'upload'
-    }, {
-        file: './client/upyun.js',
-        expose: 'upyun'
-    }]).
+        './client/upyun_upload.js',
+    ], {
+        standalone:'UpyunUpload'
+    }).
     bundle().
     pipe(source('bundle.min.js')).
     pipe(buffer()).

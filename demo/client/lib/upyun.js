@@ -1,7 +1,6 @@
 'use strict'
 
 var ES6Promise = require('es6-promise')
-var compress = require('./lib/compress')
 
 ES6Promise.polyfill()
 
