@@ -41,7 +41,6 @@
     "koa-static": "^1.4.8",
     "koa-conditional-get": "^1.0.2",
     "koa-response-time": "^1.0.2",
-    "object-assign": "^2.0.0",
     "swig": "^1.4.2"
   },
   "devDependencies": {

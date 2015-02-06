@@ -18,30 +18,29 @@
             suffix: 'jpeg,png,jpg',
             compress: {
                 quality: 0.8
+            },
+            success: function (response, fileName) {
+                console.log(response, fileName)
+                var url = ImageUpload.getPath(response)
+                $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
+            },
+            error: function (err, fileName) {
+                console.error(err.message, fileName)
+            },
+            progress: function (event, position, total, percent, fileName) {
+                console.log(percent, fileName)
+            },
+            change: function (files) {
+                console.log(files)
+                var tpl = ''
+                for (var i = 0; i < files.length; i++) {
+                    tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'
+                }
+                $('#progress').html(tpl)
+                this.submit()
             }
         }
-        var upload = new UpyunUpload('bxmedia', config)
-
-        upload.success(function (response, fileName) {
-            console.log(response, fileName)
-            var url = UpyunUpload.getPath(response)
-            $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
-
-        }).error(function (err, fileName) {
-            console.error(err.message, fileName)
-
-        }).progress(function (event, position, total, percent, fileName) {
-            console.log(percent, fileName)
-
-        }).change(function (files) {
-            console.log(files)
-            var tpl = ''
-            for (var i = 0; i < files.length; i++) {
-                tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'
-            }
-            $('#progress').html(tpl)
-            this.submit()
-        })
+        var upload = ImageUpload('upyun', config)
     </script>
 </body>
 </html>
