@@ -1,5 +1,9 @@
 /*
  * Base on arale/upload
+ * error message: 'suffix error/compress error/cross_domain error/upload error'
+ * error will call settings.error function
+ * suffix error will only stop to upload current file, if multiple is valid, other files will be continue to upload
+ * compress error only do not compress, continue to upload
  */
 
 'use strict'
@@ -119,7 +123,7 @@ Upload.prototype.bindInput = function () {
                     self.files.push(files[i])
                 } else {
                     if (self.settings.error) {
-                        self.settings.error(new Error('type error'), files[i].name)
+                        self.settings.error(new Error('suffix error'), files[i].name)
                     }
                 }
             }
@@ -162,7 +166,7 @@ Upload.prototype.ajaxSubmit = function () {
 
                 // compress failed
                 if (self.settings.error) {
-                    self.settings.error(new Error('compress error'), file.name)
+                    self.settings.error(new Error('compress error: ' + err.message), file.name)
                 }
             }).then(function (blob) {
                 blob = blob || file
@@ -195,7 +199,7 @@ Upload.prototype.ajaxSubmit = function () {
                     },
                     error: function (xhr, textStatus, errorMsg) {
                         if (self.settings.error) {
-                            self.settings.error(new Error(errorMsg), file.name)
+                            self.settings.error(new Error('upload error: ' + errorMsg), file.name)
                         }
                     }
                 })
@@ -222,7 +226,7 @@ Upload.prototype.formSubmit = function () {
             response = $.trim($(this).contents().find("body").html())
         } catch (e) {
             if (self.settings.error) {
-                self.settings.error(new Error('cross domain'), $(this).data('fileName'))
+                self.settings.error(new Error('cross_domain error'), $(this).data('fileName'))
             }
         }
         if (response) {
