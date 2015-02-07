@@ -4,11 +4,18 @@ Demo's server use koa, so need node v0.11.13+ or io.js.
 Based on arale/upload.
 
 ### Characteristics
-* Use HTML5 and Iframe <s>no flash</s>
-* Support upload progress if support XHR2（IE10+ and more）
-* Support Image compress(use canvas) if support File API and canvas（IE10+ and more）
-* Support file-suffix filter
-* Provide get upyun's config (return promise)
+* Use HTML5 and Iframe <s>no flash</s>.
+* Support upload progress if support XHR2 (IE10+ and more).
+* Support Image compress (use canvas) if support File API and canvas（IE10+ and more）
+* Support file-suffix filter.
+* Provide nice upyun/qiniu interface (need to get server config/token).
+* Error clear.
+
+more:
+* Upload error: 'suffix error/compress error/cross_domain error/upload error'. Upload error will call settings.error function.
+* Suffix error will only stop uploading current file, if multiple is valid, other files will be continue to upload.
+* Compress error only do not compress, do not stop uploading.
+* upyun/qiniu interface (imageUpload) return promise that resolve upload object, reject any error (mostly: server_config error: xxxx).
 
 ### Config
     var settings = {
@@ -26,11 +33,11 @@ Based on arale/upload.
         compress: {max_width: 180, max_height: 180, quality: 0.7} // compress Image if support File API and Canvas
     }
 
-### Demo
-see demo/
+### usage
+    var Upload = require('upload')
+    new Upload(config)
+For 'upyun/qiniu' upload, we provide imageUpload interface:
 
-### 备注
-1. 考虑到目前我们的使用场景，flash 主要的优势在于提供多文件上传，对于不支持 multiple 浏览器的使用者是否会使用 ctrl / command 来选择多个文件有待商榷。—平稳退化
-2. https://github.com/ustccjw/upload 不使用 flash，对于不支持 XHR2 的浏览器，使用 iframe form submit 来上传。
-3. 这个是在 arale/upload 的基础上改进的，使用 commonJS 模块化，browserify 预编译。
-4. 提供对 upyun 的封装，使得开发者不需要关心细节。
+    var imageUpload = require('image_upload')
+    imageUpload('upyun', config)
+In demo, we use browserify `standalone:'imageUpload'` to provide imageUpload interface.

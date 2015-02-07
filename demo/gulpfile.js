@@ -13,7 +13,7 @@ gulp.task('browserify', function () {
     return browserify([
         './client/image_upload.js',
     ], {
-        standalone:'ImageUpload'
+        standalone: 'imageUpload'
     }).
     bundle().
     pipe(source('bundle.min.js')).
