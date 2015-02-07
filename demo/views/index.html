@@ -21,7 +21,7 @@
             },
             success: function (response, fileName) {
                 console.log(response, fileName)
-                var url = ImageUpload.getPath(response)
+                var url = ImageUpload.getPath(response, '180x180')
                 $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
             },
             error: function (err, fileName) {
