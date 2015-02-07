@@ -17,9 +17,8 @@ function ImageUpload(vendor, options) {
     if (!$.isPlainObject(options)) {
         options = {}
     }
-    if (vendor !== 'upyun' && vendor !== 'qiniu' && vendor !== 'upyun_im') {
-        return Promise.reject(new Error('server_config error: vendor invalid'))
-    }
+    vendor = vendor || 'upyun'
+    options = options || {}
     return vendorLib.getConfig('image', vendor).then(function (config) {
         $.extend(options, config)
         return new Upload(options)
