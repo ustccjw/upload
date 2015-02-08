@@ -8,9 +8,16 @@
 
 'use strict'
 
+var ES6Promise = require('es6-promise')
 var compress = require('./compress')
+
+ES6Promise.polyfill()
 var iframeCount = 0
 
+/**
+ * Upload constructor
+ * @param {Object} options config
+ */
 function Upload(options) {
     if (!(this instanceof Upload)) {
         return new Upload(options)
@@ -39,8 +46,9 @@ function Upload(options) {
     this.bind()
 }
 
-// initialize
-// create input, form, iframe
+/**
+ * init hidden form contains hidden input(settings.data) and file input
+ */
 Upload.prototype.setup = function () {
     this.form = $(
         '<form method="post" enctype="multipart/form-data"'
@@ -83,10 +91,11 @@ Upload.prototype.setup = function () {
         height: $trigger.outerHeight(),
         zIndex: findzIndex($trigger) + 10
     }).appendTo('body')
-    return this
 }
 
-// bind events
+/**
+ * bind the trigger element to hidden form
+ */
 Upload.prototype.bind = function () {
     var self = this
     var $trigger = $(self.settings.trigger)
@@ -101,6 +110,10 @@ Upload.prototype.bind = function () {
     self.bindInput()
 }
 
+/**
+ * handle file input change event
+ * it will be filtered via suffix
+ */
 Upload.prototype.bindInput = function () {
     var self = this
     self.files = []
@@ -112,7 +125,7 @@ Upload.prototype.bindInput = function () {
             name: e.target.value.split('\\').pop()
         }]
 
-        // 根据文件后缀进行过滤
+        // filter via suffix
         if (self.settings.suffix) {
             var suffixArr = self.settings.suffix.split(',')
             suffixArr = $.map(suffixArr, function (value, key) {
@@ -131,6 +144,7 @@ Upload.prototype.bindInput = function () {
 
         // no accept suffix
         if (!self.files.length) {
+            self.refreshInput()
             return
         }
         if (self.settings.change) {
@@ -141,8 +155,10 @@ Upload.prototype.bindInput = function () {
     })
 }
 
-// handle submit event
-// prepare for submiting form
+/**
+ * upload file to serevr
+ * use ajax or form
+ */
 Upload.prototype.submit = function () {
     if (window.FormData) {
         this.ajaxSubmit()
@@ -151,6 +167,11 @@ Upload.prototype.submit = function () {
     }
 }
 
+/**
+ * upload file by ajax
+ * it will be compressed
+ * success or error will trigger callback function
+ */
 Upload.prototype.ajaxSubmit = function () {
     var self = this
 
@@ -160,17 +181,18 @@ Upload.prototype.ajaxSubmit = function () {
     var form = new FormData(self.form.get(0))
     self.input.prop('disabled', false)
 
-    for (var i = 0; i < files.length; i++) {
-        (function (file) {
-            compress(file, self.settings.compress)['catch'](function (err) {
+    var promiseArr = []
+    $.each(files, function (index, file) {
+        var promise = compress(file, self.settings.compress)['catch'](function (err) {
 
-                // compress failed
-                if (self.settings.error) {
-                    self.settings.error(new Error('compress error: ' + err.message), file.name)
-                }
-            }).then(function (blob) {
-                blob = blob || file
-                form.append(self.settings.name, blob, file.name)
+            // compress failed
+            if (self.settings.error) {
+                self.settings.error(new Error('compress error: ' + err.message), file.name)
+            }
+        }).then(function (blob) {
+            blob = blob || file
+            form.append(self.settings.name, blob, file.name)
+            return new Promise(function (resolve, reject) {
                 $.ajax({
                     url: self.settings.action,
                     type: 'post',
@@ -196,18 +218,30 @@ Upload.prototype.ajaxSubmit = function () {
                         if (self.settings.success) {
                             self.settings.success(data, file.name)
                         }
+                        resolve()
                     },
                     error: function (xhr, textStatus, errorMsg) {
                         if (self.settings.error) {
                             self.settings.error(new Error('upload error: ' + errorMsg), file.name)
                         }
+                        resolve()
                     }
                 })
             })
-        })(files[i])
-    }
+        })
+        promiseArr.push(promise)
+    })
+
+    // upload finished then refresh
+    Promise.all(promiseArr).then(function () {
+        self.refreshInput()
+    })
 }
 
+/**
+ * upload file by form submit
+ * success or error will trigger callback function
+ */
 Upload.prototype.formSubmit = function () {
     var self = this
     self.iframe = newIframe()
@@ -228,20 +262,24 @@ Upload.prototype.formSubmit = function () {
             if (self.settings.error) {
                 self.settings.error(new Error('cross_domain error'), $(this).data('fileName'))
             }
-        }
-        if (response) {
-            if (self.settings.success) {
+        } finally {
+            if (response && self.settings.success) {
                 self.settings.success(response, $(this).data('fileName'))
             }
+
+            // upload finished then refresh
+            self.refreshInput()
+            self.iframe.remove()
         }
-        self.iframe.remove()
     })
     self.form.submit()
 }
 
+/**
+ * replace the input element
+ * or the same file can not to be uploaded
+ */
 Upload.prototype.refreshInput = function () {
-
-    //replace the input element, or the same file can not to be uploaded
     var newInput = this.input.clone()
     this.input.before(newInput)
     this.input.off('change')
@@ -250,8 +288,11 @@ Upload.prototype.refreshInput = function () {
     this.bindInput()
 }
 
-// handle change event
-// when value in file input changed
+/**
+ * set settings.change
+ * @param  {Function} callback override settings.change
+ * @return {Object}            upload object
+ */
 Upload.prototype.change = function(callback) {
     if (!callback) {
         return this
@@ -260,31 +301,37 @@ Upload.prototype.change = function(callback) {
     return this
 }
 
-// handle when upload success
+/**
+ * set settings.success
+ * @param  {Function} callback override settings.success
+ * @return {Object}            upload object
+ */
 Upload.prototype.success = function(callback) {
-    var me = this
-    this.settings.success = function(response, fileName) {
-        me.refreshInput()
-        if (callback) {
-            callback(response, fileName)
-        }
+    if (!callback) {
+        return this
     }
+    this.settings.success = callback
     return this
 }
 
-// handle when upload error
+/**
+ * set settings.error
+ * @param  {Function} callback override settings.error
+ * @return {Object}            upload object
+ */
 Upload.prototype.error = function(callback) {
-    var me = this
-    this.settings.error = function(response, fileName) {
-        if (callback) {
-            me.refreshInput()
-            callback(response, fileName)
-        }
+    if (!callback) {
+        return this
     }
+    this.settings.error = callback
     return this
 }
 
-// add progress
+/**
+ * set settings.progress
+ * @param  {Function} callback override settings.progress
+ * @return {Object}            upload object
+ */
 Upload.prototype.progress = function(callback) {
     if (!callback) {
         return this
@@ -293,9 +340,13 @@ Upload.prototype.progress = function(callback) {
     return this
 }
 
+/**
+ * create hidden input for data
+ * @param  {Object} data settings.data
+ * @return {Array}       array of hidden input
+ */
 function createInputs(data) {
     if (!data) return []
-
     var inputs = [], i
     for (var name in data) {
         i = document.createElement('input')
@@ -307,6 +358,11 @@ function createInputs(data) {
     return inputs
 }
 
+/**
+ * find the parents
+ * @param  {jQueryElement} $node
+ * @return {number}               parents max zIndex + 10
+ */
 function findzIndex($node) {
     var parents = $node.parentsUntil('body')
     var zIndex = 0
@@ -319,6 +375,10 @@ function findzIndex($node) {
     return zIndex
 }
 
+/**
+ * init iframe when trigger form submit
+ * @return {jQueryElement} iframe element of jQuery
+ */
 function newIframe() {
     var iframeName = 'iframe-Upload-' + iframeCount
     var iframe = $('<iframe name="' + iframeName + '" />').hide()
