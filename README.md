@@ -33,7 +33,7 @@ more:
         compress: {max_width: 180, max_height: 180, quality: 0.7} // compress Image if support File API and Canvas
     }
 
-### usage
+### Usage
     var Upload = require('upload')
     new Upload(config)
 For 'upyun/qiniu' upload, we provide imageUpload interface:

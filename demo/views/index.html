@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>arale-upload</title>
+    <style>
+        .image-progress {
+            float: left;
+            width: 180px;
+            margin-right: 5px;
+        }
+        progress[value] {
+            width: 180px;
+            height: 20px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+    </style>
 </head>
 <body>
     <button id="uploader">上传文件</button>
-    <div id="progress">
+    <div id="display">
     </div>
     <script src="/jquery.min.js"></script>
     <script src="/es6-promise-2.0.1.min.js"></script>
@@ -22,21 +35,24 @@
             success: function (response, fileName) {
                 console.log(response, fileName)
                 var url = imageUpload.getPath(response, '180x180')
-                $('#progress img[data-filename="' + fileName + '"]').attr('src', url)
+                $('.image-progress[data-filename="' + fileName + '"] img').attr('src', url)
             },
             error: function (err, fileName) {
                 console.error(err.message, fileName)
             },
             progress: function (event, position, total, percent, fileName) {
                 console.log(percent, fileName)
+                $('.image-progress[data-filename="' + fileName + '"] progress').attr('value', percent)
+                $('.image-progress[data-filename="' + fileName + '"] progress').html(percent + ' %')
             },
             change: function (files) {
                 console.log(files)
                 var tpl = ''
                 for (var i = 0; i < files.length; i++) {
-                    tpl += '<img src="/loading.gif"' + ' data-filename="' + files[i].name + '">'
+                    tpl += '<div class="image-progress" data-filename="' + files[i].name + '"><img src="/loading.gif">'
+                    tpl += '<progress value="0" max="100">0 %</progress></div>'
                 }
-                $('#progress').html(tpl)
+                $('#display').html(tpl)
                 this.submit()
             }
         }
