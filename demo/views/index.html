@@ -35,15 +35,17 @@
             success: function (response, fileName) {
                 console.log(response, fileName)
                 var url = imageUpload.getPath(response, '180x180')
-                $('.image-progress[data-filename="' + fileName + '"] img').attr('src', url)
+                var $img = $('.image-progress[data-filename="' + fileName + '"] img').last()
+                $img.attr('src', url)
             },
             error: function (err, fileName) {
                 console.error(err.message, fileName)
             },
             progress: function (event, position, total, percent, fileName) {
                 console.log(percent, fileName)
-                $('.image-progress[data-filename="' + fileName + '"] progress').attr('value', percent)
-                $('.image-progress[data-filename="' + fileName + '"] progress').html(percent + ' %')
+                var $progress = $('.image-progress[data-filename="' + fileName + '"] progress').last()
+                $progress.attr('value', percent)
+                $progress.html(percent + ' %')
             },
             change: function (files) {
                 console.log(files)
@@ -52,7 +54,7 @@
                     tpl += '<div class="image-progress" data-filename="' + files[i].name + '"><img src="/loading.gif">'
                     tpl += '<progress value="0" max="100">0 %</progress></div>'
                 }
-                $('#display').html(tpl)
+                $('#display').append(tpl)
                 this.submit()
             }
         }
