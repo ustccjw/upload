@@ -8,8 +8,8 @@ var render = require('../lib/render')
 // router
 app.use(router(app))
 app.get('/', getIndex)
-app.get('/ImageUpload/getConfig/', getConfig)
-app.get('/ImageUpload/getResult/', getResult)
+app.get('/imageUpload/getConfig/', getConfig)
+app.get('/imageUpload/getResult/', getResult)
 
 function* getConfig() {
     var data = {}
@@ -34,7 +34,7 @@ function* getConfig() {
             }
             var policy = new Buffer(JSON.stringify(options)).toString('base64')
             var hash = crypto.createHash('md5')
-            var str = policy + '&' + 'form-api-xxxx'
+            var str = policy + '&' + 'icjvaWAQFMBkRfxuovi3xy3w3ik='
             var signature = hash.update(str, 'utf8').digest('hex')
             data.success = true
             data.message = {

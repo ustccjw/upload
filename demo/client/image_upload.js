@@ -31,8 +31,8 @@ function imageUpload(vendor, options) {
  * @param  {string} suffix   path suffix(180x180)
  * @return {string}          url path, if response is invalid, return null
  */
-imageUpload.getPath = function (response, suffix) {
-    return vendorLib.getPath('image', response, suffix)
+imageUpload.getPath = function (vendor, response, suffix) {
+    return vendorLib.getPath('image', vendor, response, suffix)
 }
 
 module.exports = imageUpload

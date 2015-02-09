@@ -42,10 +42,10 @@ exports.getConfig = function (type, vendor) {
         window.location.origin = window.location.origin ||
             window.location.protocol + "//" + window.location.hostname +
             (window.location.port ? ':' + window.location.port: '')
-        var url = window.location.origin + '/ImageUpload/getConfig/'
+        var url = window.location.origin + '/imageUpload/getConfig/'
         var query = {
             vendor: vendor,
-            'return-url': window.location.origin + '/ImageUpload/getResult/'
+            'return-url': window.location.origin + '/imageUpload/getResult/'
         }
         if (window.FormData) {
             delete query['return-url']
@@ -64,24 +64,28 @@ exports.getConfig = function (type, vendor) {
 /**
  * get image/media getPath
  * @param  {string} type    'image/media'
+ * @param  {string} vendor 'upyun/qiniu/upyun_im'
  * @param  {Object} reponse {code, url,...}
  * @param  {string} suffix  '180x180'
  * @return {string}         url path, if response is invalid, return null
  */
-exports.getPath = function (type, response, suffix) {
+exports.getPath = function (type, vendor, response, suffix) {
     if (type === 'image') {
         response = $.parseJSON(response)
+        suffix = suffix ? ('_' + suffix) : '_sq'
         if (response.code >= 200 && response.code < 300) {
-            var url = response.url.replace(/\.$/, '')
-            url = url.split('.')
-            var type = url[1] ? ('.' + url[1]) : ''
-            url = url[0];
-            suffix = suffix ? ('_' + suffix) : '_sq'
-
-            if (url.indexOf('#') !== -1) {
-                type = url.split('#')[0]
+            if (vendor === 'upyun') {
+                var url = response.url.replace(/\.$/, '')
+                url = url.split('.')
+                var type = url[1] ? ('.' + url[1]) : ''
+                url = url[0];
+                if (url.indexOf('#') !== -1) {
+                    type = url.split('#')[0]
+                }
+                return 'http://img' + (url.charCodeAt(1) % 3 + 4) + '.baixing.net' + url + type + suffix
+            } else if (vendor === 'qiniu') {
+                return 'http://img7.baixing.net/' + response.url.split('#')[0] + suffix
             }
-            return 'http://img' + (url.charCodeAt(1) % 3 + 4) + '.baixing.net' + url + type + suffix
         } else {
             return null
         }
