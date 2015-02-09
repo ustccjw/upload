@@ -34,7 +34,7 @@ function* getConfig() {
             }
             var policy = new Buffer(JSON.stringify(options)).toString('base64')
             var hash = crypto.createHash('md5')
-            var str = policy + '&' + 'icjvaWAQFMBkRfxuovi3xy3w3ik='
+            var str = policy + '&' + 'form-api-xxxx'
             var signature = hash.update(str, 'utf8').digest('hex')
             data.success = true
             data.message = {
