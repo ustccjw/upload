@@ -27,12 +27,17 @@ function imageUpload(vendor, options) {
 
 /**
  * get uploaded image path
+ * @param  {string} vendor   'upyun/qiniu/upyun_im
  * @param  {string} response reponse Json String
  * @param  {string} suffix   path suffix(180x180)
  * @return {string}          url path, if response is invalid, return null
  */
 imageUpload.getPath = function (vendor, response, suffix) {
-    return vendorLib.getPath('image', vendor, response, suffix)
+    response = $.parseJSON(response)
+    if (!response.url) {
+        return null
+    }
+    return vendorLib.getPath('image', vendor, response.url, suffix)
 }
 
 module.exports = imageUpload
