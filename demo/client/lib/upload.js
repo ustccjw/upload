@@ -1,8 +1,8 @@
 /*
  * Base on arale/upload
- * error message: 'suffix error/compress error/cross_domain error/upload error'
+ * error message: 'extension error/compress error: xxxx/upload error: xxxx'
  * error will call settings.error function
- * Suffix error will only stop uploading current file, if multiple is valid, other files will be continue to upload
+ * extension error will only stop uploading current file, if multiple is valid, other files will be continue to upload
  * Compress error only do not compress, do not stop uploading
  */
 
@@ -13,6 +13,7 @@ var compress = require('./compress')
 
 ES6Promise.polyfill()
 var iframeCount = 0
+var TIME = 10000
 
 /**
  * Upload constructor
@@ -22,7 +23,7 @@ function Upload(options) {
     if (!(this instanceof Upload)) {
         return new Upload(options)
     }
-    if (!$.isPlainObject(options)) {
+    if (typeof options !== 'object') {
         options = {}
     }
     var settings = {
@@ -36,7 +37,7 @@ function Upload(options) {
         error: null,
         success: null,
         progress: null,
-        suffix: null,
+        extension: null,
         compress: null
     }
     $.extend(settings, options)
@@ -112,7 +113,7 @@ Upload.prototype.bind = function () {
 
 /**
  * handle file input change event
- * it will be filtered via suffix
+ * it will be filtered via extension
  */
 Upload.prototype.bindInput = function () {
     var self = this
@@ -125,24 +126,24 @@ Upload.prototype.bindInput = function () {
             name: e.target.value.split('\\').pop()
         }]
 
-        // filter via suffix
-        if (self.settings.suffix) {
-            var suffixArr = self.settings.suffix.split(',')
-            suffixArr = $.map(suffixArr, function (value, key) {
+        // filter via extension
+        if (self.settings.extension) {
+            var extensionArr = self.settings.extension.split(',')
+            extensionArr = $.map(extensionArr, function (value, key) {
                 return $.trim(value)
             })
             for (var i = 0; i < files.length; i++) {
-                if ($.inArray(files[i].name.split('.').pop(), suffixArr) !== -1) {
+                if ($.inArray(files[i].name.split('.').pop(), extensionArr) !== -1) {
                     self.files.push(files[i])
                 } else {
                     if (self.settings.error) {
-                        self.settings.error(new Error('suffix error'), files[i].name)
+                        self.settings.error(new Error('extension error'), files[i].name)
                     }
                 }
             }
         }
 
-        // no accept suffix
+        // no accept extension
         if (!self.files.length) {
             self.refreshInput()
             return
@@ -199,6 +200,7 @@ Upload.prototype.ajaxSubmit = function () {
                     processData: false,
                     contentType: false,
                     data: form,
+                    timeout: TIME,
                     xhr: function () {
                         var xhr = $.ajaxSettings.xhr()
                         if (xhr.upload && self.settings.progress) {
@@ -220,9 +222,9 @@ Upload.prototype.ajaxSubmit = function () {
                         }
                         resolve()
                     },
-                    error: function (xhr, textStatus, errorMsg) {
+                    error: function (xhr, textStatus) {
                         if (self.settings.error) {
-                            self.settings.error(new Error('upload error: ' + errorMsg), file.name)
+                            self.settings.error(new Error('upload error: ' + textStatus), file.name)
                         }
                         resolve()
                     }
@@ -248,22 +250,24 @@ Upload.prototype.formSubmit = function () {
     self.form.attr('target', self.iframe.attr('name'))
     self.iframe.data('fileName', self.files[0].name)
     $('body').append(self.iframe)
+    var timer = null
     self.iframe.one('load', function () {
+        clearTimeout(timer)
 
         // Fix for IE endless progress bar activity bug
         // (happens on form submits to iframe targets):
         $('<iframe src="javascript:false;"></iframe>')
             .appendTo(self.form)
             .remove()
-        var response = ''
+        var response = null
         try {
             response = $.trim($(this).contents().find("body").html())
         } catch (e) {
             if (self.settings.error) {
-                self.settings.error(new Error('cross_domain error'), $(this).data('fileName'))
+                self.settings.error(new Error('upload error: cross domain'), $(this).data('fileName'))
             }
         } finally {
-            if (response && self.settings.success) {
+            if (response !== null && self.settings.success) {
                 self.settings.success(response, $(this).data('fileName'))
             }
 
@@ -273,6 +277,15 @@ Upload.prototype.formSubmit = function () {
         }
     })
     self.form.submit()
+    timer = setTimeout(function () {
+        if (self.settings.error) {
+            self.settings.error(new Error('upload error: timeout'), $(this).data('fileName'))
+        }
+
+        // upload finished then refresh
+        self.refreshInput()
+        self.iframe.remove()
+    }, TIME)
 }
 
 /**

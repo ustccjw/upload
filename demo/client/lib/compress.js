@@ -11,17 +11,28 @@ ES6Promise.polyfill()
  */
 function compress(file, options) {
 
-    // check File support
+    // do not need to compress
+    if (options === false) {
+        return Promise.resolve(file)
+    }
+
+    // check File API support
     if (!window.File || !window.FileReader || !window.URL) {
-        return Promise.resolve(file)
+        return Promise.reject(new Error('File API not support'))
     }
 
-    // do not compress
-    if (options === false || !(/image/i).test(file.type)) {
-        return Promise.resolve(file)
+    // check file param
+    if (!(file instanceof File)) {
+        return Promise.reject(new Error('file invalid'))
     }
 
-    options = options || {}
+    // can not compress
+    if (!(/image/i).test(file.type)) {
+        return Promise.reject(new Error('file is not image'))
+    }
+    if (typeof options !== 'object') {
+        options = {}
+    }
     return new Promise(function (resolve, reject) {
 
         // read the files

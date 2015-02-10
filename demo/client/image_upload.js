@@ -5,20 +5,17 @@ var vendorLib = require('./lib/vendor')
  * imageUpload function
  * @param  {string} vendor  'upyun/qiniu/upyun_im'
  * @param  {Object} options upload config
- * @return {Promise}        promise resolve upload object, reject any error
- * err message: 'server_config error: xxxx'
- * upload error will call error function(options.error)
+ * @return {Promise}        promise resolve upload object, reject any error (mostly: server_config error: xxxx)
  */
 function imageUpload(vendor, options) {
-    if ($.isPlainObject(vendor)) {
+    if (typeof vendor === 'object') {
         options = vendor
         vendor = 'upyun'
     }
-    if (!$.isPlainObject(options)) {
+    vendor = vendor || 'upyun'
+    if (typeof options !== 'object') {
         options = {}
     }
-    vendor = vendor || 'upyun'
-    options = options || {}
     return vendorLib.getConfig('image', vendor).then(function (config) {
         $.extend(options, config)
         return new Upload(options)
@@ -30,7 +27,7 @@ function imageUpload(vendor, options) {
  * @param  {string} vendor   'upyun/qiniu/upyun_im
  * @param  {string} response reponse Json String
  * @param  {string} suffix   path suffix(180x180)
- * @return {string}          url path, if response is invalid, return null
+ * @return {string}          url path
  */
 imageUpload.getPath = function (vendor, response, suffix) {
     response = $.parseJSON(response)

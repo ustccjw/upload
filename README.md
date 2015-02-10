@@ -7,13 +7,13 @@ Based on arale/upload.
 * Use HTML5 and Iframe <s>no flash</s>.
 * Support upload progress if support XHR2 (IE10+ and more).
 * Support Image compress (use canvas) if support File API and canvas（IE10+ and more）
-* Support file-suffix filter.
+* Support file-extension filter.
 * Provide nice upyun/qiniu interface (need to get server config/token).
 * Error clear.
 
 more:
-* Upload error: 'suffix error/compress error: xxxx/upload error: xxxx'. Upload error will call settings.error function.
-* Suffix error will only stop uploading current file, if multiple is valid, other files will be continue to upload.
+* Upload error: 'extension error/compress error: xxxx/upload error: xxxx'. Upload error will call settings.error function.
+* extension error will only stop uploading current file, if multiple is valid, other files will be continue to upload.
 * Compress error only do not compress, do not stop uploading.
 * upyun/qiniu interface (imageUpload) return promise that resolve upload object, reject any error (mostly: server_config error: xxxx).
 
@@ -29,7 +29,7 @@ more:
         error: function (errorMsg, fileName) {}, // trigger when error
         success: function (response, fileName) {}, // trigger when upload success
         progress: function (event, position, total, percent, fileName) {}, // effective when support progress(XHR2)
-        suffix: 'jpeg,png,jpg', // check the file-suffix before submit
+        extension: 'jpeg,png,jpg', // check the file-extension before submit
         compress: {max_width: 180, max_height: 180, quality: 0.7} // compress Image if support File API and Canvas
     }
 
