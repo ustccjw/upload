@@ -40,8 +40,14 @@ gulp.task('upload', function () {
 })
 
 gulp.task('copy', function () {
-    return gulp.src('./client/**/*.js').
+    gulp.src('./client/**/*.js').
         pipe(gulp.dest('../'))
+    gulp.src('./public/javascript/image_upload.min.js').
+        pipe(gulp.dest('../dist'))
+    gulp.src('./public/javascript/upload.min.js').
+        pipe(gulp.dest('../dist'))
 })
 
-gulp.task('default', ['image-upload', 'upload', 'copy'])
+gulp.task('default', ['image-upload', 'upload'], function () {
+    gulp.start('copy')
+})
