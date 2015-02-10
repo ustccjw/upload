@@ -34,7 +34,8 @@
             },
             success: function (response, fileName) {
                 console.log(response, fileName)
-                var url = imageUpload.getPath('upyun', response, '180x180')
+                // default (response, '180x180', 'upyun')
+                var url = imageUpload.getThumbnailUrl(response, '180x180')
                 var $img = $('.image-progress[data-filename="' + fileName + '"] img').last()
                 $img.attr('src', url)
             },
@@ -58,7 +59,8 @@
                 this.submit()
             }
         }
-        var uploadPromise = imageUpload('upyun', config)
+        // default ('upyun', config)
+        imageUpload(config)
     </script>
 </body>
 </html>

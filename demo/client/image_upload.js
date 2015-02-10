@@ -23,18 +23,40 @@ function imageUpload(vendor, options) {
 }
 
 /**
- * get uploaded image path
- * @param  {string} vendor   'upyun/qiniu/upyun_im
+ * get uploaded image Thumbnail url
  * @param  {string} response reponse Json String
  * @param  {string} suffix   path suffix(180x180)
- * @return {string}          url path
+ * @param  {string} vendor   'upyun/qiniu/upyun_im'
+ * @return {string}          Thumbnail url
  */
-imageUpload.getPath = function (vendor, response, suffix) {
+imageUpload.getThumbnailUrl = function (response, suffix, vendor) {
+    vendor = vendor || 'upyun'
     response = $.parseJSON(response)
     if (!response.url) {
         return null
     }
     return vendorLib.getPath('image', vendor, response.url, suffix)
+}
+
+/**
+ * get url pass to server
+ * @param  {string} response reponse Json String
+ * @param  {String} vendor   'upyun/qiniu/upyun_im'
+ * @return {string}          url
+ */
+imageUpload.getUrl = function (response, vendor) {
+    vendor = vendor || 'upyun'
+    response = $.parseJSON(response)
+    if (!response.url) {
+        return null
+    }
+    var suffix = ''
+    if (vendor === 'upyun' || vendor === 'upyun_im') {
+        suffix = '#up'
+    } else if (vendor === 'qiniu') {
+        suffix = '#qn'
+    }
+    return response.url + suffix
 }
 
 module.exports = imageUpload
