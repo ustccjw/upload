@@ -12,7 +12,7 @@ Based on arale/upload.
 * Error clear.
 
 more:
-* Upload error: 'suffix error/compress error/cross_domain error/upload error'. Upload error will call settings.error function.
+* Upload error: 'suffix error/compress error: xxxx/upload error: xxxx'. Upload error will call settings.error function.
 * Suffix error will only stop uploading current file, if multiple is valid, other files will be continue to upload.
 * Compress error only do not compress, do not stop uploading.
 * upyun/qiniu interface (imageUpload) return promise that resolve upload object, reject any error (mostly: server_config error: xxxx).
