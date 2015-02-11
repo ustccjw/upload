@@ -25,6 +25,7 @@ more:
         accept: 'image/*', // effective when support accept(input)
         multiple: true, // effective when support multiple(input)
         compress: {max_width, max_height, quality}, // compress Image if support File API and Canvas
+        timeout: 10000,
         change: function (files, uids) {}, // tigger when you select file
         error: function (errorMsg, uid) {}, // trigger when error
         success: function (response, uid) {}, // trigger when upload success
