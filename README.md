@@ -7,37 +7,62 @@ Based on arale/upload.
 * Use HTML5 and Iframe <s>no flash</s>.
 * Support upload progress if support XHR2 (IE10+ and more).
 * Support Image compress (use canvas) if support File API and canvas（IE10+ and more）
-* Support file-extension filter.
 * Provide nice upyun/qiniu interface (need to get server config/token).
 * Error clear.
 
 more:
-* error: 'extension error/compress error: xxxx/upload error: xxxx'. Upload error will call settings.error function.
-* extension error will only stop uploading current file, if multiple is valid, other files will be continue to upload.
+* error: 'compress error: xxxx/upload error: xxxx'. Upload error will call settings.error function.
 * Compress error only do not compress, do not stop uploading.
 * upyun/qiniu interface (imageUpload) return promise that resolve upload object, reject any error (mostly: server_config error: xxxx).
+* imageUpload also support data-API.
 
 ### Config
-    var settings = {
+    var options = {
         trigger: '#uploader', // trigger upload element
         name: 'file', // input file name
         action: 'http://v0.api.upyun.com/bucket', // server url
-        data: {policy: policy, signature: signature}, // post data
+        data: {policy, signature}, // post data
         accept: 'image/*', // effective when support accept(input)
         multiple: true, // effective when support multiple(input)
-        change: function (files) {}, // tigger when you select file
-        error: function (errorMsg, fileName) {}, // trigger when error
-        success: function (response, fileName) {}, // trigger when upload success
-        progress: function (event, position, total, percent, fileName) {}, // effective when support progress(XHR2)
-        extension: 'jpeg,png,jpg', // check the file-extension before submit
-        compress: {max_width: 180, max_height: 180, quality: 0.7} // compress Image if support File API and Canvas
+        compress: {max_width, max_height, quality}, // compress Image if support File API and Canvas
+        change: function (files, uids) {}, // tigger when you select file
+        error: function (errorMsg, uid) {}, // trigger when error
+        success: function (response, uid) {}, // trigger when upload success
+        progress: function (position, total, percent, uid) {} // effective when support progress(XHR2)
     }
 
 ### Usage
     var Upload = require('upload')
-    new Upload(config)
-For 'upyun/qiniu' upload, we provide imageUpload interface:
+    new Upload(options)
+For 'upyun/qiniu' upload, we provide imageUpload interfacem, we use browserify `standalone:'imageUpload'` to provide imageUpload interface:
 
-    var imageUpload = require('image_upload')
-    imageUpload('upyun', config)
-In demo, we use browserify `standalone:'imageUpload'` to provide imageUpload interface.
+    imageUpload('upyun', options)
+You can use data-API, then use DOM event handle success, error and more:
+
+    <form>
+        <button data-image-upload data-suffix="180x180" data-vendor="upyun">上传文件</button>
+    </form>
+
+    $('[data-image-upload]').on('imageUploadSuccess', function (event, data) {
+
+            // add thumbnail image, add image url hidden input
+            var thumbnailUrl = data.thumbnailUrl
+            var url = data.url
+            var uid = data.uid
+            $('[data-uid=' + uid + ']').attr('src', thumbnailUrl)
+            $(this).parents('form').append('<input type="hidden" name="images[]" value="' + url + '">')
+
+        }).on('imageUploadError', function (event, data) {
+
+            // remove loading.gif
+            alert(data.mesage)
+            $('[data-uid=' + uid + ']').remove()
+
+        }).on('imageUploadSelect', function (event, data) {
+            // add loading.gif
+            var tpl = ''
+            $.each(data.uids, function (index, uid) {
+                tpl += '<img data-uid="' + uid+'" src="/loading.gif"/>'
+            })
+            $(this).before(tpl)
+        })

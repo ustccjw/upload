@@ -17,46 +17,109 @@ function imageUpload(vendor, options) {
         options = {}
     }
     return vendorLib.getConfig('image', vendor).then(function (config) {
-        $.extend(options, config)
-        return new Upload(options)
+        $.extend(config, {
+            accept: 'image/*',
+            compress: {
+                max_width: 300,
+                max_height: 300
+            }
+        }, options)
+        return new Upload(config)
     })
 }
 
 /**
  * get uploaded image Thumbnail url
- * @param  {string} response reponse Json String
+ * @param  {Object} response reponse object
  * @param  {string} suffix   path suffix(180x180)
  * @param  {string} vendor   'upyun/qiniu/upyun_im'
  * @return {string}          Thumbnail url
  */
-imageUpload.getThumbnailUrl = function (response, suffix, vendor) {
+getThumbnailUrl = function (vendor, response, suffix) {
     vendor = vendor || 'upyun'
-    response = $.parseJSON(response)
-    if (!response.url) {
-        return null
+    var url = response.url || response.key
+    suffix = suffix ? ('_' + suffix) : '_sq'
+    if (vendor === 'upyun') {
+        url = url.replace(/\.$/, '').split('.')
+        var extension = url[1] ? ('.' + url[1]) : ''
+        url = url[0]
+        return 'http://img' + (url.charCodeAt(1) % 3 + 4) + '.baixing.net' + url + extension + suffix
+    } else if (vendor === 'qiniu') {
+        return 'http://img7.baixing.net/' + url.split('#')[0] + suffix
     }
-    return vendorLib.getPath('image', vendor, response.url, suffix)
 }
 
 /**
- * get url pass to server
- * @param  {string} response reponse Json String
+ * get url for db store
+ * @param  {Object} response reponse object
  * @param  {String} vendor   'upyun/qiniu/upyun_im'
  * @return {string}          url
  */
-imageUpload.getUrl = function (response, vendor) {
+getUrl = function (vendor, response) {
     vendor = vendor || 'upyun'
-    response = $.parseJSON(response)
-    if (!response.url) {
-        return null
-    }
+    var url = response.url || response.key
     var suffix = ''
     if (vendor === 'upyun' || vendor === 'upyun_im') {
         suffix = '#up'
     } else if (vendor === 'qiniu') {
         suffix = '#qn'
     }
-    return response.url + suffix
+    return url + suffix
 }
 
 module.exports = imageUpload
+
+// image-upload init via data-API
+$(function () {
+    $('[data-image-upload]').each(function (index, element) {
+        var vendor = $(element).data('vendor')
+        var suffix = $(element).data('suffix')
+        imageUpload(vendor, {
+            trigger: $(element),
+            success: function (response, uid) {
+                response = $.parseJSON(response)
+                if (response.code === 200) {
+                    $(element).trigger('imageUploadSuccess', {
+                        thumbnailUrl: getThumbnailUrl(vendor, response, suffix),
+                        url: getUrl(vendor, response),
+                        uid: uid
+                    })
+                } else {
+                    $(element).trigger('imageUploadError', {
+                        message: response.message || response.error,
+                        uid: uid
+                    })
+                }
+            },
+            error: function (err, uid) {
+                if (err.message.indexOf('compress error') !== -1) {
+                    return
+                }
+                $(element).trigger('imageUploadError', {
+                    message: err.message,
+                    uid: uid
+                })
+            },
+            progress: function (position, total, percent, uid) {
+                $(element).trigger('imageUploadProgress', {
+                    position: position,
+                    total: total,
+                    percent: percent,
+                    uid: uid
+                })
+            },
+            select: function (files, uids) {
+                $(element).trigger('imageUploadSelect', {
+                    files: files,
+                    uids: uids
+                })
+                this.submit()
+            }
+        })['catch'](function (err) {
+            $(element).trigger('imageUploadError', {
+                message: err.message
+            })
+        })
+    })
+})
+

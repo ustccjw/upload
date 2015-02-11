@@ -4,63 +4,39 @@
     <meta charset="UTF-8">
     <title>arale-upload</title>
     <style>
-        .image-progress {
-            float: left;
-            width: 180px;
-            margin-right: 5px;
-        }
-        progress[value] {
-            width: 180px;
-            height: 20px;
-            -webkit-appearance: none;
-            appearance: none;
-        }
     </style>
 </head>
 <body>
-    <button id="uploader">上传文件</button>
-    <div id="display">
-    </div>
+    <form>
+        <button data-image-upload data-suffix="180x180" data-vendor="upyun">上传文件</button>
+    </form>
     <script src="/jquery.min.js"></script>
     <script src="/es6-promise-2.0.1.min.js"></script>
     <script src="/image_upload.min.js"></script>
     <script>
-        var config = {
-            trigger: '#uploader',
-            accept: 'image/jpeg,image/png',
-            extension: 'jpeg,png,jpg',
-            compress: {
-                quality: 0.8
-            },
-            success: function (response, fileName) {
-                console.log(response, fileName)
-                // default (response, '180x180', 'upyun')
-                var url = imageUpload.getThumbnailUrl(response, '180x180')
-                var $img = $('.image-progress[data-filename="' + fileName + '"] img').last()
-                $img.attr('src', url)
-            },
-            error: function (err, fileName) {
-                console.error(err.message, fileName)
-            },
-            progress: function (event, position, total, percent, fileName) {
-                console.log(percent, fileName)
-                var $progress = $('.image-progress[data-filename="' + fileName + '"] progress').last()
-                $progress.attr('value', percent)
-                $progress.html(percent + ' %')
-            },
-            change: function (files) {
-                console.log(files)
-                var tpl = ''
-                for (var i = 0; i < files.length; i++) {
-                    tpl += '<div class="image-progress" data-filename="' + files[i].name + '"><img src="/loading.gif">'
-                    tpl += '<progress value="0" max="100">0 %</progress></div>'
-                }
-                $('#display').append(tpl)
-                this.submit()
-            }
-        }
-        // default ('upyun', config)
-        imageUpload(config)
+        $('[data-image-upload]').on('imageUploadSuccess', function (event, data) {
+
+            // add thumbnail image, add image url hidden input
+            var thumbnailUrl = data.thumbnailUrl
+            var url = data.url
+            var uid = data.uid
+            $('[data-uid=' + uid + ']').attr('src', thumbnailUrl)
+            $(this).parents('form').append('<input type="hidden" name="images[]" value="' + url + '">')
+
+        }).on('imageUploadError', function (event, data) {
+
+            // remove loading.gif
+            alert(data.mesage)
+            $('[data-uid=' + uid + ']').remove()
+
+        }).on('imageUploadSelect', function (event, data) {
+            // add loading.gif
+            var tpl = ''
+            $.each(data.uids, function (index, uid) {
+                tpl += '<img data-uid="' + uid+'" src="/loading.gif"/>'
+            })
+            $(this).before(tpl)
+        })
     </script>
 </body>
 </html>
