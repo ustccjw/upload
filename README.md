@@ -1,5 +1,5 @@
 # Upload
-> It is a CommonJS Module of Upload Module.
+> It is a Upload Component.
 Demo's server use koa, so need node v0.11.13+ or io.js.
 Based on arale/upload.
 
