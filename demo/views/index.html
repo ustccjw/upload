@@ -23,7 +23,7 @@
         }).on('imageUploadError', function (event, errMsg, uid) {
 
             // remove loading.gif
-            alert(data.mesage)
+            alert(errMsg)
             $('[data-uid=' + uid + ']').remove()
 
         }).on('imageUploadSelect', function (event, files, uids) {

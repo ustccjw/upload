@@ -48,4 +48,5 @@ You can use data-API, then use DOM event handle success, error and more:
     }).on('imageUploadError', function (event, errMsg, uid) {
     }).on('imageUploadSelect', function (event, files, uids) {
     }).on('imageUploadProgress', function (event, position, total, percent, uid) {
+    }).on('imageUploadTimeout', function (uid) {
     })

@@ -87,7 +87,11 @@ $(function () {
                 }
             },
             error: function (err, uid) {
-                if (err.message.indexOf('compress error') !== -1) {
+                if (err.message.indexOf('compress error') === 0) {
+                    return
+                }
+                if (err.message === 'upload error: timeout') {
+                    $(element).trigger('imageUploadTimeout', [uid])
                     return
                 }
                 $(element).trigger('imageUploadError', [err.message, uid])
