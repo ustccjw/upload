@@ -37,7 +37,7 @@ function imageUpload(vendor, options) {
  */
 getThumbnailUrl = function (vendor, response, suffix) {
     vendor = vendor || 'upyun'
-    var url = response.url || response.key
+    var url = response.url || response.upload_ret.url
     suffix = suffix ? ('_' + suffix) : '_sq'
     if (vendor === 'upyun') {
         url = url.replace(/\.$/, '').split('.')
@@ -57,7 +57,7 @@ getThumbnailUrl = function (vendor, response, suffix) {
  */
 getUrl = function (vendor, response) {
     vendor = vendor || 'upyun'
-    var url = response.url || response.key
+    var url = response.url || response.upload_ret.url
     var suffix = ''
     if (vendor === 'upyun' || vendor === 'upyun_im') {
         suffix = '#up'
@@ -77,8 +77,10 @@ $(function () {
         imageUpload(vendor, {
             trigger: $(element),
             success: function (response, uid) {
-                response = $.parseJSON(response)
-                if (response.code === 200) {
+                if (typeof response === 'string') {
+                    response = $.parseJSON(response)
+                }
+                if (response.code === 200 || (vendor === 'qiniu' && !response.error)) {
                     var thumbnailUrl = getThumbnailUrl(vendor, response, suffix)
                     var url =getUrl(vendor, response)
                     $(element).trigger('imageUploadSuccess', [thumbnailUrl, url, uid])

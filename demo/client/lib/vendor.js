@@ -52,11 +52,11 @@ exports.getConfig = function (type, vendor) {
         if (window.FormData) {
             delete query['return-url']
         }
-        if (window.vendor) {
+        if (window[vendor]) {
             return Promise.resolve({
-                action: window.vendor.uploadUrl,
-                data: window.vendor.uploadParams,
-                name: window.vendor.fileKey
+                action: window[vendor].uploadUrl,
+                data: window[vendor].uploadParams,
+                name: window[vendor].fileKey
             })
         } else {
             return getJson(url, query).then(function (response) {

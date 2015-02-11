@@ -34,7 +34,7 @@ more:
 ### Usage
     var Upload = require('upload')
     new Upload(options)
-For 'upyun/qiniu' upload, we provide imageUpload interfacem, we use browserify `standalone:'imageUpload'` to provide imageUpload interface:
+For 'upyun/qiniu' upload, we provide imageUpload interface, we use browserify `standalone:'imageUpload'` to provide imageUpload interface:
 
     imageUpload('upyun', options)
 You can use data-API, then use DOM event handle success, error and more:
