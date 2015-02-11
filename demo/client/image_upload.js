@@ -79,46 +79,28 @@ $(function () {
             success: function (response, uid) {
                 response = $.parseJSON(response)
                 if (response.code === 200) {
-                    $(element).trigger('imageUploadSuccess', {
-                        thumbnailUrl: getThumbnailUrl(vendor, response, suffix),
-                        url: getUrl(vendor, response),
-                        uid: uid
-                    })
+                    var thumbnailUrl = getThumbnailUrl(vendor, response, suffix)
+                    var url =getUrl(vendor, response)
+                    $(element).trigger('imageUploadSuccess', [thumbnailUrl, url, uid])
                 } else {
-                    $(element).trigger('imageUploadError', {
-                        message: response.message || response.error,
-                        uid: uid
-                    })
+                    $(element).trigger('imageUploadError', [response.message || response.error, uid])
                 }
             },
             error: function (err, uid) {
                 if (err.message.indexOf('compress error') !== -1) {
                     return
                 }
-                $(element).trigger('imageUploadError', {
-                    message: err.message,
-                    uid: uid
-                })
+                $(element).trigger('imageUploadError', [err.message, uid])
             },
             progress: function (position, total, percent, uid) {
-                $(element).trigger('imageUploadProgress', {
-                    position: position,
-                    total: total,
-                    percent: percent,
-                    uid: uid
-                })
+                $(element).trigger('imageUploadProgress', arguments)
             },
             select: function (files, uids) {
-                $(element).trigger('imageUploadSelect', {
-                    files: files,
-                    uids: uids
-                })
+                $(element).trigger('imageUploadSelect', arguments)
                 this.submit()
             }
         })['catch'](function (err) {
-            $(element).trigger('imageUploadError', {
-                message: err.message
-            })
+            $(element).trigger('imageUploadError', err.message)
         })
     })
 })

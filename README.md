@@ -43,26 +43,8 @@ You can use data-API, then use DOM event handle success, error and more:
         <button data-image-upload data-suffix="180x180" data-vendor="upyun">上传文件</button>
     </form>
 
-    $('[data-image-upload]').on('imageUploadSuccess', function (event, data) {
-
-            // add thumbnail image, add image url hidden input
-            var thumbnailUrl = data.thumbnailUrl
-            var url = data.url
-            var uid = data.uid
-            $('[data-uid=' + uid + ']').attr('src', thumbnailUrl)
-            $(this).parents('form').append('<input type="hidden" name="images[]" value="' + url + '">')
-
-        }).on('imageUploadError', function (event, data) {
-
-            // remove loading.gif
-            alert(data.mesage)
-            $('[data-uid=' + uid + ']').remove()
-
-        }).on('imageUploadSelect', function (event, data) {
-            // add loading.gif
-            var tpl = ''
-            $.each(data.uids, function (index, uid) {
-                tpl += '<img data-uid="' + uid+'" src="/loading.gif"/>'
-            })
-            $(this).before(tpl)
-        })
+    $('[data-image-upload]').on('imageUploadSuccess', function (event, thumbnailUrl, url, uid) {
+        }).on('imageUploadError', function (event, errMsg, uid) {
+        }).on('imageUploadSelect', function (event, files, uids) {
+        }).on('imageUploadProgress', function (position, total, percent, uid) {
+        }
