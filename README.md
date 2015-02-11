@@ -27,7 +27,7 @@ more:
         compress: {max_width, max_height, quality}, // compress Image if support File API and Canvas
         timeout: 10000,
         change: function (files, uids) {}, // tigger when you select file
-        error: function (errorMsg, uid) {}, // trigger when error
+        error: function (error, uid) {}, // trigger when error
         success: function (response, uid) {}, // trigger when upload success
         progress: function (position, total, percent, uid) {} // effective when support progress(XHR2)
     }
