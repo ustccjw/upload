@@ -44,7 +44,7 @@ You can use data-API, then use DOM event handle success, error and more:
     </form>
 
     $('[data-image-upload]').on('imageUploadSuccess', function (event, thumbnailUrl, url, uid) {
-        }).on('imageUploadError', function (event, errMsg, uid) {
-        }).on('imageUploadSelect', function (event, files, uids) {
-        }).on('imageUploadProgress', function (position, total, percent, uid) {
-        }
+    }).on('imageUploadError', function (event, errMsg, uid) {
+    }).on('imageUploadSelect', function (event, files, uids) {
+    }).on('imageUploadProgress', function (position, total, percent, uid) {
+    })
