@@ -37,15 +37,12 @@ function imageUpload(vendor, options) {
  */
 getThumbnailUrl = function (vendor, response, suffix) {
     vendor = vendor || 'upyun'
-    var url = response.url || response.upload_ret.url
+    var url = response.url || response.upload_ret.url.split('#')[0]
     suffix = suffix ? ('_' + suffix) : '_sq'
     if (vendor === 'upyun') {
-        url = url.replace(/\.$/, '').split('.')
-        var extension = url[1] ? ('.' + url[1]) : ''
-        url = url[0]
-        return 'http://img' + (url.charCodeAt(1) % 3 + 4) + '.baixing.net' + url + extension + suffix
+        return 'http://img' + (url.charCodeAt(1) % 3 + 4) + '.baixing.net' + url + suffix
     } else if (vendor === 'qiniu') {
-        return 'http://img7.baixing.net/' + url.split('#')[0] + suffix
+        return 'http://img7.baixing.net/' + url + suffix
     }
 }
 
@@ -57,7 +54,7 @@ getThumbnailUrl = function (vendor, response, suffix) {
  */
 getUrl = function (vendor, response) {
     vendor = vendor || 'upyun'
-    var url = response.url || response.upload_ret.url
+    var url = response.url || response.upload_ret.url.split('#')[0]
     var suffix = ''
     if (vendor === 'upyun' || vendor === 'upyun_im') {
         suffix = '#up'
@@ -82,7 +79,7 @@ $(function () {
                 }
                 if (response.code === 200 || (vendor === 'qiniu' && !response.error)) {
                     var thumbnailUrl = getThumbnailUrl(vendor, response, suffix)
-                    var url =getUrl(vendor, response)
+                    var url = getUrl(vendor, response)
                     $(element).trigger('imageUploadSuccess', [thumbnailUrl, url, uid])
                 } else {
                     $(element).trigger('imageUploadError', [response.message || response.error, uid])
