@@ -71,6 +71,8 @@ Upload.prototype.setup = function () {
     this.input = $(input)
 
     var $trigger = $(this.settings.trigger)
+    var outerWidth = $trigger.outerWidth ?  $trigger.outerWidth() : $trigger[0].offsetWidth
+    var outerHeight = $trigger.outerHeight ?  $trigger.outerHeight() : $trigger[0].offsetHeight
     this.input.attr('hidefocus', true).css({
         position: 'absolute',
         top: 0,
@@ -78,8 +80,9 @@ Upload.prototype.setup = function () {
         opacity: 0,
         outline: 0,
         cursor: 'pointer',
-        height: $trigger.outerHeight(),
-        fontSize: Math.max(64, $trigger.outerHeight() * 5)
+        width: outerWidth,
+        height: outerHeight,
+        fontSize: Math.max(64, outerHeight * 5)
     })
     this.form.append(this.input)
     this.form.css({
@@ -87,8 +90,8 @@ Upload.prototype.setup = function () {
         top: $trigger.offset().top,
         left: $trigger.offset().left,
         overflow: 'hidden',
-        width: $trigger.outerWidth(),
-        height: $trigger.outerHeight(),
+        width: outerWidth,
+        height: outerHeight,
         zIndex: findzIndex($trigger) + 10
     }).appendTo('body')
 }
@@ -99,12 +102,14 @@ Upload.prototype.setup = function () {
 Upload.prototype.bind = function () {
     var self = this
     var $trigger = $(self.settings.trigger)
+    var outerWidth = $trigger.outerWidth ?  $trigger.outerWidth() : $trigger[0].offsetWidth
+    var outerHeight = $trigger.outerHeight ?  $trigger.outerHeight() : $trigger[0].offsetHeight
     $trigger.mouseenter(function () {
         self.form.css({
             top: $trigger.offset().top,
             left: $trigger.offset().left,
-            width: $trigger.outerWidth(),
-            height: $trigger.outerHeight()
+            width: outerWidth,
+            height: outerHeight
         })
     })
     self.bindInput()
@@ -206,9 +211,12 @@ Upload.prototype.ajaxSubmit = function () {
                         }
                         resolve()
                     },
-                    error: function (xhr, textStatus) {
+                    error: function (xhr, textStatus, errorThrown) {
+                        if (errorThrown) {
+                            errorThrown = ' ' + errorThrown
+                        }
                         if (self.settings.error) {
-                            self.settings.error(new Error('upload error: ' + textStatus), self.uids[index])
+                            self.settings.error(new Error('upload error: ' + textStatus + errorThrown), self.uids[index])
                         }
                         resolve()
                     }
@@ -366,14 +374,15 @@ function createInputs(data) {
  * @return {number}               parents max zIndex + 10
  */
 function findzIndex($node) {
-    var parents = $node.parentsUntil('body')
     var zIndex = 0
-    for (var i = 0; i < parents.length; i++) {
-        var item = parents.eq(i)
-        if (item.css('position') !== 'static') {
-            zIndex = parseInt(item.css('zIndex'), 10) || zIndex
+    $.each($node.parents(), function (index, item) {
+        if (item === $('body')[0]) {
+            return false
         }
-    }
+        if ($(item).css('position') !== 'static') {
+            zIndex = parseInt($(item).css('zIndex'), 10) || zIndex
+        }
+    })
     return zIndex
 }
 

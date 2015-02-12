@@ -94,15 +94,14 @@ $(function () {
                 }
                 if (err.message === 'upload error: timeout') {
                     $(element).trigger('imageUploadTimeout', [uid])
-                    return
                 }
                 $(element).trigger('imageUploadError', [err.message, uid])
             },
             progress: function (position, total, percent, uid) {
-                $(element).trigger('imageUploadProgress', arguments)
+                $(element).trigger('imageUploadProgress', [].slice.call(arguments, 0))
             },
             select: function (files, uids) {
-                $(element).trigger('imageUploadSelect', arguments)
+                $(element).trigger('imageUploadSelect', [].slice.call(arguments, 0))
                 this.submit()
             }
         })['catch'](function (err) {

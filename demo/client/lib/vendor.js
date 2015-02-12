@@ -24,8 +24,11 @@ var getJson = function (url, data) {
                     reject(new Error('server_config error: ' + response.message))
                 }
             },
-            error: function (xhr, textStatus) {
-                reject(new Error('server_config error: ' + textStatus))
+            error: function (xhr, textStatus, errorThrown) {
+                if (errorThrown) {
+                    errorThrown = ' ' + errorThrown
+                }
+                reject(new Error('server_config error: ' + textStatus + errorThrown))
             }
         })
     })
