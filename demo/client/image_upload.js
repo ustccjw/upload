@@ -19,7 +19,7 @@ function imageUpload(vendor, options) {
     return vendorLib.getConfig('image', vendor).then(function (config) {
         $.extend(config, {
             accept: 'image/*',
-            timeout: 10000,
+            timeout: 5000,
             compress: {
                 max_width: 300,
                 max_height: 300
