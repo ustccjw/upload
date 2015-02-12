@@ -1,8 +1,7 @@
 /*
  * Base on arale/upload
- * error message: 'compress error: xxxx/upload error: xxxx'
+ * error message: 'upload error: xxxx' (mostly)
  * error will call settings.error function
- * Compress error only do not compress, do not stop uploading
  */
 
 'use strict'
@@ -123,7 +122,6 @@ Upload.prototype.bindInput = function () {
     var self = this
     self.files = []
 
-    self.input.prop('disabled', false)
     self.input.change(function(e) {
 
         // ie9- don't support FileList Object
@@ -148,9 +146,10 @@ Upload.prototype.bindInput = function () {
  */
 Upload.prototype.submit = function () {
     if (window.FormData) {
-        this.ajaxSubmit()
+        this.ajaxSubmit(this.files, this.uids)
+        this.refreshInput()
     } else {
-        this.formSubmit()
+        this.formSubmit(this.uids[0])
     }
 }
 
@@ -159,29 +158,23 @@ Upload.prototype.submit = function () {
  * it will be compressed
  * success or error will trigger callback function
  */
-Upload.prototype.ajaxSubmit = function () {
+Upload.prototype.ajaxSubmit = function (files, uids) {
     var self = this
-
-    // disabled input, avoid files change when upload
-    self.input.prop('disabled', true)
 
     // upyun server do not support multiple files upload
     var promiseArr = []
-    $.each(self.files, function (index, file) {
+    $.each(files, function (index, file) {
         var promise = compress(file, self.settings.compress)['catch'](function (err) {
 
-            // compress failed
-            if (self.settings.error) {
-                self.settings.error(new Error('compress error: ' + err.message), self.uids[index])
-            }
+            // compress error then go on uploading
+            return file
         }).then(function (blob) {
 
-            // add data (input has disabled)
+            // add data and file
+            self.input.prop('disabled', true)
             var form = new FormData(self.form.get(0))
-
-            // add file
-            blob = blob || file
             form.append(self.settings.name, blob, file.name)
+            self.input.prop('disabled', false)
             return new Promise(function (resolve, reject) {
                 $.ajax({
                     url: self.settings.action,
@@ -206,83 +199,81 @@ Upload.prototype.ajaxSubmit = function () {
                         return xhr
                     },
                     success: function (data) {
-                        if (self.settings.success) {
-                            self.settings.success(data, self.uids[index])
-                        }
-                        resolve()
+                        resolve(data)
                     },
                     error: function (xhr, textStatus, errorThrown) {
                         if (errorThrown) {
                             errorThrown = ' ' + errorThrown
                         }
-                        if (self.settings.error) {
-                            self.settings.error(new Error('upload error: ' + textStatus + errorThrown), self.uids[index])
-                        }
-                        resolve()
+                        var message = 'upload error: ' + textStatus + errorThrown
+                        reject(new Error(message))
                     }
                 })
             })
+        }).then(function (data) {
+            if (self.settings.success) {
+                self.settings.success(data, uids[index])
+            }
+        }, function (err) {
+            if (self.settings.error) {
+                self.settings.error(err, uids[index])
+            }
         })
         promiseArr.push(promise)
     })
-
-    // upload finished then refresh
-    return Promise.all(promiseArr).then(function () {
-        self.refreshInput()
-    })
+    return Promise.all(promiseArr)
 }
 
 /**
  * upload file by form submit
  * success or error will trigger callback function
+ * promise: only upload one file once
  */
-Upload.prototype.formSubmit = function () {
+Upload.prototype.formSubmit = function (uid) {
     var self = this
-    self.iframe = newIframe()
-    self.form.attr('target', self.iframe.attr('name'))
-    self.iframe.data('uid', self.uids[0])
-    $('body').append(self.iframe)
-    var timer = null
-    self.iframe.one('load', function () {
-        clearTimeout(timer)
 
-        // Fix for IE endless progress bar activity bug
-        // (happens on form submits to iframe targets):
-        $('<iframe src="javascript:false;"></iframe>')
-            .appendTo(self.form)
-            .remove()
-        var response = null
-        try {
-            response = $.trim($(this).contents().find("body").html())
-        } catch (e) {
-            if (self.settings.error) {
-                self.settings.error(new Error('upload error: cross domain'), $(this).data('uid'))
-            }
-        } finally {
-            if (response !== null && self.settings.success) {
-                self.settings.success(response, $(this).data('uid'))
-            }
+    return new Promise(function (resolve, reject) {
 
-            // upload finished then refresh
-            self.refreshInput()
-            $(this).remove()
-        }
-    })
-    self.form.submit()
+        // combine form and iframe
+        self.iframe = newIframe()
+        self.form.attr('target', self.iframe.attr('name'))
+        $('body').append(self.iframe)
 
-    // disabled input, avoid files change when upload
-    self.input.prop('disabled', true)
+        // init timer and bind load iframe load event
+        var timer = null
+        self.iframe.one('load', function () {
+            clearTimeout(timer)
 
-    // add timer
-    timer = setTimeout(function () {
-        if (self.settings.error) {
-            self.settings.error(new Error('upload error: timeout'), self.iframe.data('uid'))
-        }
+            // Fix for IE endless progress bar activity bug
+            // (happens on form submits to iframe targets):
+            $('<iframe src="javascript:false;"></iframe>')
+                .appendTo(self.form)
+                .remove()
+            var response = $.trim($(this).contents().find("body").html())
+            resolve(response)
+        })
 
-        // upload finished then refresh
+        // submit and refresh
+        self.form.submit()
         self.refreshInput()
+
+        // add timer
+        timer = setTimeout(function () {
+            reject(new Error('upload error: timeout'))
+        }, self.settings.timeout)
+    }).then(function (data) {
+        if (self.settings.success) {
+            self.settings.success(data, uid)
+        }
+    }, function (err) {
+        if (self.settings.error) {
+            self.settings.error(err, uid)
+        }
+    }).then(function () {
+
+        // upload finished then remove iframe
         self.iframe.remove()
-    }, self.settings.timeout)
+    })
 }
 
 /**
