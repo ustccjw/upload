@@ -1,9 +1,7 @@
 'use strict'
 
 var ES6Promise = require('es6-promise')
-if (ES6Promise) {
-    ES6Promise.polyfill()
-}
+ES6Promise.polyfill()
 
 // err message: 'server_config error: xxxx'
 

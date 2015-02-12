@@ -10,9 +10,7 @@
 var ES6Promise = require('es6-promise')
 var compress = require('./compress')
 
-if (ES6Promise) {
-    ES6Promise.polyfill()
-}
+ES6Promise.polyfill()
 var iframeCount = 0
 var uid = 0
 
@@ -119,6 +117,8 @@ Upload.prototype.bind = function () {
 Upload.prototype.bindInput = function () {
     var self = this
     self.files = []
+
+    self.input.prop('disabled', false)
     self.input.change(function(e) {
 
         // ie9- don't support FileList Object
@@ -157,10 +157,12 @@ Upload.prototype.submit = function () {
 Upload.prototype.ajaxSubmit = function () {
     var self = this
 
+    // disabled input, avoid files change when upload
+    self.input.prop('disabled', true)
+
     // upyun server do not support multiple files upload
-    var files = self.files
     var promiseArr = []
-    $.each(files, function (index, file) {
+    $.each(self.files, function (index, file) {
         var promise = compress(file, self.settings.compress)['catch'](function (err) {
 
             // compress failed
@@ -169,10 +171,8 @@ Upload.prototype.ajaxSubmit = function () {
             }
         }).then(function (blob) {
 
-            // add data
-            self.input.prop('disabled', true)
+            // add data (input has disabled)
             var form = new FormData(self.form.get(0))
-            self.input.prop('disabled', false)
 
             // add file
             blob = blob || file
@@ -219,7 +219,7 @@ Upload.prototype.ajaxSubmit = function () {
     })
 
     // upload finished then refresh
-    Promise.all(promiseArr).then(function () {
+    return Promise.all(promiseArr).then(function () {
         self.refreshInput()
     })
 }
@@ -261,6 +261,11 @@ Upload.prototype.formSubmit = function () {
         }
     })
     self.form.submit()
+
+    // disabled input, avoid files change when upload
+    self.input.prop('disabled', true)
+
+    // add timer
     timer = setTimeout(function () {
         if (self.settings.error) {
             self.settings.error(new Error('upload error: timeout'), self.iframe.data('uid'))
