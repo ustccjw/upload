@@ -38,7 +38,8 @@ function imageUpload(vendor, options) {
  */
 getThumbnailUrl = function (vendor, response, suffix) {
     vendor = vendor || 'upyun'
-    var url = response.url || response.upload_ret.url.split('#')[0]
+    var url = response.url || response.upload_ret.url
+    url = url.split('#')[0]
     suffix = suffix ? ('_' + suffix) : '_sq'
     if (vendor === 'upyun') {
         return 'http://img' + (url.charCodeAt(1) % 3 + 4) + '.baixing.net' + url + suffix
@@ -55,7 +56,8 @@ getThumbnailUrl = function (vendor, response, suffix) {
  */
 getUrl = function (vendor, response) {
     vendor = vendor || 'upyun'
-    var url = response.url || response.upload_ret.url.split('#')[0]
+    var url = response.url || response.upload_ret.url
+    url = url.split('#')[0]
     var suffix = ''
     if (vendor === 'upyun' || vendor === 'upyun_im') {
         suffix = '#up'
