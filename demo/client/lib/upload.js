@@ -52,14 +52,14 @@ function Upload(options) {
  * init form that contains hidden data input and transparency file input
  */
 Upload.prototype.setup = function () {
-    this.form = $('<form></from>').prop({
+    this.form = $('<form></from>').attr({
         method: 'post',
         enctype: 'multipart/form-data',
         action: this.settings.action
     })
     this.form.append(createInputs(this.settings.data))
 
-    this.input = $('<input></input>').prop({
+    this.input = $('<input></input>').attr({
         type: 'file',
         name: this.settings.name,
         accept: this.settings.accept || '',
@@ -68,7 +68,7 @@ Upload.prototype.setup = function () {
     var $trigger = $(this.settings.trigger)
     var outerWidth = $trigger.outerWidth ?  $trigger.outerWidth() : $trigger[0].offsetWidth
     var outerHeight = $trigger.outerHeight ?  $trigger.outerHeight() : $trigger[0].offsetHeight
-    this.input.prop('hidefocus', true).css({
+    this.input.attr('hidefocus', true).css({
         position: 'absolute',
         left: 0,
         top: 0,
@@ -241,7 +241,7 @@ Upload.prototype.formSubmit = function (uid) {
 
         // combine form and iframe
         self.iframe = newIframe()
-        self.form.prop('target', self.iframe.prop('name'))
+        self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
 
         // bind iframe load event
@@ -353,7 +353,7 @@ Upload.prototype.progress = function(callback) {
 function createInputs(data) {
     if (!data) return []
     return $.map(data, function (value, key) {
-        return $('<input></input>').prop({
+        return $('<input></input>').attr({
             type: 'hidden',
             name: key,
             value: value
@@ -384,7 +384,7 @@ function findzIndex($node) {
  * @return {jQueryElement} iframe element of jQuery
  */
 function newIframe() {
-    return $('<iframe></iframe>').prop({
+    return $('<iframe></iframe>').attr({
         name: 'iframe-Upload-' + iframeCount++
     }).hide()
 }

@@ -102,7 +102,7 @@ $(function () {
                 this.submit()
             }
         })['catch'](function (err) {
-            $(element).trigger('imageUploadError', err.message)
+            console.log(err)
         })
     })
 })
