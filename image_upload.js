@@ -36,7 +36,7 @@ function imageUpload(vendor, options) {
  * @param  {string} vendor   'upyun/qiniu/upyun_im'
  * @return {string}          Thumbnail url
  */
-getThumbnailUrl = function (vendor, response, suffix) {
+function getThumbnailUrl(vendor, response, suffix) {
     vendor = vendor || 'upyun'
     var url = response.url || response.upload_ret.url
     url = url.split('#')[0]
@@ -54,7 +54,7 @@ getThumbnailUrl = function (vendor, response, suffix) {
  * @param  {String} vendor   'upyun/qiniu/upyun_im'
  * @return {string}          url
  */
-getUrl = function (vendor, response) {
+function getUrl(vendor, response) {
     vendor = vendor || 'upyun'
     var url = response.url || response.upload_ret.url
     url = url.split('#')[0]
