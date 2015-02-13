@@ -12,9 +12,7 @@ var buffer = require('vinyl-buffer')
 gulp.task('image-upload', function () {
     return browserify([
         './client/image_upload.js',
-    ], {
-        standalone: 'imageUpload'
-    }).
+    ]).
     bundle().
     pipe(source('image_upload.min.js')).
     pipe(buffer()).

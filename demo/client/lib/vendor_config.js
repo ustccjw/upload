@@ -11,7 +11,7 @@ ES6Promise.polyfill()
  * @param  {Object} data query data
  * @return {Promise}     promise resolve message
  */
-var getJson = function (url, data) {
+function getJson(url, data) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             url: url,
@@ -40,7 +40,7 @@ var getJson = function (url, data) {
  * @param  {string} vendor 'upyun/qiniu/upyun_im'
  * @return {Promise}        promise resolve server config
  */
-exports.getConfig = function (type, vendor) {
+function getConfig(type, vendor) {
     if (type === 'image') {
         window.location.origin = window.location.origin ||
             window.location.protocol + "//" + window.location.hostname +
@@ -53,14 +53,16 @@ exports.getConfig = function (type, vendor) {
         if (window.FormData) {
             delete query['return-url']
         }
-        if (window[vendor]) {
+        var cache = window[vendor.toUpperCase()]
+        if (cache) {
             return Promise.resolve({
-                action: window[vendor].uploadUrl,
-                data: window[vendor].uploadParams,
-                name: window[vendor].fileKey
+                action: cache.uploadUrl,
+                data: cache.uploadParams,
+                name: cache.fileKey
             })
         } else {
             return getJson(url, query).then(function (response) {
+                window[vendor.toUpperCase()] = response
                 return {
                     action: response.uploadUrl,
                     data: response.uploadParams,
@@ -71,3 +73,5 @@ exports.getConfig = function (type, vendor) {
     }
     return Promise.reject(new Error('server_config error: ' + 'media type invalid'))
 }
+
+module.exports = getConfig

@@ -1,5 +1,5 @@
 var Upload = require('./lib/upload')
-var vendorLib = require('./lib/vendor')
+var vendorConfig = require('./lib/vendor_config')
 
 /**
  * imageUpload function
@@ -16,7 +16,7 @@ function imageUpload(vendor, options) {
     if (typeof options !== 'object') {
         options = {}
     }
-    return vendorLib.getConfig('image', vendor).then(function (config) {
+    return vendorConfig('image', vendor).then(function (config) {
         $.extend(config, {
             accept: 'image/*',
             timeout: 5000,
@@ -67,15 +67,15 @@ getUrl = function (vendor, response) {
     return url + suffix
 }
 
-module.exports = imageUpload
-
 // image-upload init via data-API
 $(function () {
     $('[data-image-upload]').each(function (index, element) {
         var vendor = $(element).data('vendor')
+        var accept = $(element).data('accept')
         var suffix = $(element).data('suffix')
         imageUpload(vendor, {
             trigger: $(element),
+            accept: accept,
             success: function (response, uid) {
                 if (typeof response === 'string') {
                     response = $.parseJSON(response)
