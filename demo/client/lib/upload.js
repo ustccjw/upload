@@ -244,8 +244,14 @@ Upload.prototype.formSubmit = function (uid) {
         self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
 
+        var timer = null
         // bind iframe load event
         self.iframe.one('load', function () {
+
+            // has timeout
+            if (timer === null) {
+                return
+            }
             clearTimeout(timer)
 
             // Fix for IE endless progress bar activity bug (happens on form submits to iframe targets)
@@ -258,8 +264,9 @@ Upload.prototype.formSubmit = function (uid) {
         self.form.submit()
 
         // add timer
-        var timer = setTimeout(function () {
+        timer = setTimeout(function () {
             reject(new Error('upload error: timeout'))
+            timer = null
         }, self.settings.timeout)
     }).then(function (data) {
 
