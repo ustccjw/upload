@@ -244,8 +244,8 @@ Upload.prototype.formSubmit = function (uid) {
         self.form.attr('target', self.iframe.attr('name'))
         $('body').append(self.iframe)
 
-        var timer = null
         // bind iframe load event
+        var timer = null
         self.iframe.one('load', function () {
 
             // has timeout
