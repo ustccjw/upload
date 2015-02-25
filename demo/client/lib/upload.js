@@ -267,7 +267,13 @@ Upload.prototype.formSubmit = function (uid) {
             $('<iframe src="javascript:false;"></iframe>')
                 .appendTo(self.form)
                 .remove()
-            var response = $.trim($(this).contents().find("body").html())
+
+            // cross domain try/catch
+            try {
+                var response = $.trim($(this).contents().find("body").html())
+            } catch (err) {
+                reject(new Error('upload error: cross domain'))
+            }
             resolve(response)
         })
         self.form.submit()
