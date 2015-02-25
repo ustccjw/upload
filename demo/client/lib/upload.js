@@ -36,7 +36,7 @@ function Upload(options) {
         success: null,
         progress: null,
         compress: false,
-        timeout: 10000
+        timeout: null
     }
     $.extend(settings, options)
     this.settings = settings
@@ -72,11 +72,11 @@ Upload.prototype.setup = function () {
         position: 'absolute',
         left: 0,
         top: 0,
+        width: outerWidth,
+        height: outerHeight,
         opacity: 0,
         outline: 0,
-        cursor: 'pointer',
-        width: outerWidth,
-        height: outerHeight
+        cursor: 'pointer'
     })
     this.form.append(this.input)
     this.form.css({
@@ -104,7 +104,7 @@ Upload.prototype.bind = function () {
             left: $trigger.offset().left,
             width: outerWidth,
             height: outerHeight
-        })
+        }).show()
     })
     self.bindInput()
 }
@@ -140,14 +140,19 @@ Upload.prototype.bindInput = function () {
  * @return {Promise}   upload completed primise
  */
 Upload.prototype.submit = function () {
+    var self = this
     var promise = null
     if (window.FormData) {
-        promise = this.ajaxSubmit(this.files, this.uids)
+        promise = self.ajaxSubmit(self.files, self.uids)
     } else {
-        promise = this.formSubmit(this.uids[0])
+        promise = self.formSubmit(self.uids[0])
     }
-    this.refreshInput()
-    return promise
+    self.refreshInput()
+
+    // hide form, avoid trigger position vary
+    return promise.then(function () {
+        self.form.hide()
+    })
 }
 
 /**
@@ -252,7 +257,11 @@ Upload.prototype.formSubmit = function (uid) {
             if (timer === null) {
                 return
             }
-            clearTimeout(timer)
+
+            // timer exist
+            if (timer !== undefined) {
+                clearTimeout(timer)
+            }
 
             // Fix for IE endless progress bar activity bug (happens on form submits to iframe targets)
             $('<iframe src="javascript:false;"></iframe>')
@@ -264,10 +273,14 @@ Upload.prototype.formSubmit = function (uid) {
         self.form.submit()
 
         // add timer
-        timer = setTimeout(function () {
-            reject(new Error('upload error: timeout'))
-            timer = null
-        }, self.settings.timeout)
+        if (self.settings.timeout > 0) {
+            timer = setTimeout(function () {
+                reject(new Error('upload error: timeout'))
+                timer = null
+            }, self.settings.timeout)
+        } else {
+            timer = undefined
+        }
     }).then(function (data) {
 
         // upload success

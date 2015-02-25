@@ -55,7 +55,6 @@ By business encapsulation, like image_upload.js, we have:
     }).on('imageUploadError', function (event, errMsg, uid) {
     }).on('imageUploadSelect', function (event, files, uids) {
     }).on('imageUploadProgress', function (event, position, total, percent, uid) {
-    }).on('imageUploadTimeout', function (event, uid) {
     })
 
 ### Demo

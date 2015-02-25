@@ -19,7 +19,7 @@ function imageUpload(vendor, options) {
     return vendorConfig('image', vendor).then(function (config) {
         $.extend(config, {
             accept: 'image/*',
-            timeout: 5000,
+            timeout: 10000,
             compress: {
                 max_width: 300,
                 max_height: 300
@@ -89,9 +89,6 @@ $(function () {
                 }
             },
             error: function (err, uid) {
-                if (err.message === 'upload error: timeout') {
-                    $(element).trigger('imageUploadTimeout', [uid])
-                }
                 $(element).trigger('imageUploadError', [err.message, uid])
             },
             progress: function (position, total, percent, uid) {
