@@ -22,7 +22,8 @@ function imageUpload(vendor, options) {
 			timeout: 10000,
 			compress: {
 				max_width: 300,
-				max_height: 300
+				max_height: 300,
+				quality: 0.8
 			}
 		}, options)
 		return new Upload(config)
