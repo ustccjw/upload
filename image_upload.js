@@ -81,7 +81,7 @@ $(function () {
 				if (typeof response === 'string') {
 					response = $.parseJSON(response)
 				}
-				if (response.code === 200 || (vendor === 'qiniu' && !response.error)) {
+				if (+response.code === 200 || (vendor === 'qiniu' && !response.error)) {
 					var thumbnailUrl = getThumbnailUrl(vendor, response, suffix)
 					var url = getUrl(vendor, response)
 					$(element).trigger('imageUploadSuccess', [thumbnailUrl, url, uid])

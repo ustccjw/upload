@@ -52,14 +52,14 @@ function Upload(options) {
  * init form that contains hidden data input and transparency file input
  */
 Upload.prototype.setup = function () {
-	this.form = $('<form></from>').attr({
+	this.form = $(document.createElement('form')).attr({
 		method: 'post',
 		enctype: 'multipart/form-data',
 		action: this.settings.action
 	})
 	this.form.append(createInputs(this.settings.data))
 
-	this.input = $('<input></input>').attr({
+	this.input = $(document.createElement('input')).attr({
 		type: 'file',
 		name: this.settings.name,
 		accept: this.settings.accept || '',
@@ -264,9 +264,10 @@ Upload.prototype.formSubmit = function (uid) {
 			}
 
 			// Fix for IE endless progress bar activity bug (happens on form submits to iframe targets)
-			$('<iframe src="javascript:false;"></iframe>')
-				.appendTo(self.form)
-				.remove()
+			var iframe = '<iframe src="javascript:false;"></iframe>'
+			$(document.createElement(iframe)).
+				appendTo(self.form).
+				remove()
 
 			// cross domain try/catch
 			try {
@@ -379,7 +380,7 @@ Upload.prototype.progress = function (callback) {
 function createInputs(data) {
 	if (!data) return []
 	return $.map(data, function (value, key) {
-		return $('<input></input>').attr({
+		return $(document.createElement('input')).attr({
 			type: 'hidden',
 			name: key,
 			value: value
@@ -410,9 +411,12 @@ function findzIndex($node) {
  * @return {jQueryElement} iframe element of jQuery
  */
 function newIframe() {
-	return $('<iframe></iframe>').attr({
-		name: 'iframe-Upload-' + iframeCount++
-	}).hide()
+	var iframeName = 'iframe-uploader-' + iframeCount
+	var iframe = '<iframe name="' + iframeName + '" />'
+
+	// IE7: iframe.name can not be seted
+	// http://terminalapp.net/submitting-a-form-with-target-set-to-a-script-generated-iframe-on-ie/
+	return $(document.createElement(iframe)).hide()
 }
 
 module.exports = Upload
